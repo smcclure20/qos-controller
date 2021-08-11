@@ -16,9 +16,10 @@ INTERFACE = "veth0" # TODO: do this on a virtual interface to be safe!
 ipr = IPRoute()
 
 bpf = BPF(src_file="filter.c", debug=0)
+bpf2 = BPF(src_file="rate_limit.c", debug=0)
 
 bpf_fn = bpf.load_func("filter", BPF.BPF_PROG_TYPE_SCHED_CLS)
-bpf_fn2 = bpf.load_func("filter", BPF.BPF_PROG_TYPE_SCHED_CLS)
+bpf_fn2 = bpf2.load_func("filter", BPF.BPF_PROG_TYPE_SCHED_CLS)
 iface = ipr.link_lookup(ifname=INTERFACE)
 
 # Set up egress classifier
@@ -60,7 +61,7 @@ ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_fn2.fd,
 while True:
        time.sleep(OUTPUT_INTERVAL)
 
-       packet_cnt = bpf.get_table('counts')  # Take the counts and report
+       packet_cnt = bpf2.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
               file.write(packet_cnt.items())
               file.write(packet_cnt.values())
