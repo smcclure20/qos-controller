@@ -11,7 +11,7 @@ import time
 OUTPUT_INTERVAL = 10
 USAGE_FILE = "./usage"
 PRIORITIES_FILE = "./prios"
-INTERFACE = "veth0" # TODO: do this on a virtual interface to be safe!
+INTERFACE = "lo"
 
 ipr = IPRoute()
 
