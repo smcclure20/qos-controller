@@ -18,8 +18,8 @@ ipr = IPRoute()
 bpf = BPF(src_file="filter.c", debug=0)
 bpf2 = BPF(src_file="rate_limit.c", debug=0)
 
-bpf_fn = bpf.load_func("filter", BPF.BPF_PROG_TYPE_SCHED_CLS)
-bpf_fn2 = bpf2.load_func("filter", BPF.BPF_PROG_TYPE_SCHED_CLS)
+bpf_fn = bpf.load_func("filter", BPF.SCHED_CLS)
+bpf_fn2 = bpf2.load_func("filter", BPF.SCHED_CLS)
 iface = ipr.link_lookup(ifname=INTERFACE)
 
 # Set up egress classifier
