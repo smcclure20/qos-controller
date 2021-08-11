@@ -52,7 +52,10 @@ int filter(struct __sk_buff *skb) {
 		// not this simple - if a split class, need to set class on every nth packet
 		uint vni = vxlan->key;
 		u64* prio = priorities.lookup(&vni);
-		skb->tc_classid = (__u32)*prio;
+		if (prio != NULL){
+		    skb->tc_classid = (__u32)*prio;
+		}
+
 		goto KEEP;
 
     KEEP:
