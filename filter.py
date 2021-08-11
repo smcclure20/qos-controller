@@ -15,11 +15,11 @@ INTERFACE = "lo"
 
 ipr = IPRoute()
 
-bpf = BPF(src_file="filter.c", debug=0)
-bpf2 = BPF(src_file="rate_limit.c", debug=0)
+bpf_filter = BPF(src_file="filter.c", debug=0)
+bpf_rl = BPF(src_file="rate_limit.c", debug=0)
 
-bpf_fn = bpf.load_func("filter", BPF.SCHED_CLS)
-bpf_fn2 = bpf2.load_func("filter", BPF.SCHED_CLS)
+bpf_filter_fn = bpf_filter.load_func("filter", BPF.SCHED_CLS)
+bpf_rl_fn = bpf_rl.load_func("filter", BPF.SCHED_CLS)
 iface = ipr.link_lookup(ifname=INTERFACE)
 
 # Set up egress classifier
@@ -50,25 +50,25 @@ ipr.tc("add", "pfifo_fast", iface, 0x200000,
        parent=0x10020)
 
 # Add filter
-ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_fn.fd,
-       name=bpf_fn.name, parent=0x10000, action="ok")
+ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
+       name=bpf_filter_fn.name, parent=0x10000, action="ok")
 
 # Set up ingress classifier
 ipr.tc("add", "ingress", iface, "ffff:")
-ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_fn2.fd,
-       name=bpf_fn2.name, parent="ffff:", action="ok", classid=1)
+ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
+       name=bpf_rl_fn.name, parent="ffff:", action="ok", classid=1)
 
 while True:
        time.sleep(OUTPUT_INTERVAL)
 
-       packet_cnt = bpf2.get_table('counts')  # Take the counts and report
+       packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
               file.write(packet_cnt.items())
               file.write(packet_cnt.values())
        packet_cnt.clear()
 
        # TODO: Should probably reorder these
-       priority_table = bpf.get_table(
+       priority_table = bpf_rl.get_table(
               'priorities')  # Set the priorities based on instructions from the controller -> how to do the x% thing here?
        with open(PRIORITIES_FILE, "r") as file:
               priorities = eval(file.read())
