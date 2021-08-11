@@ -22,41 +22,44 @@ bpf_filter_fn = bpf_filter.load_func("filter", BPF.SCHED_CLS)
 bpf_rl_fn = bpf_rl.load_func("filter", BPF.SCHED_CLS)
 iface = ipr.link_lookup(ifname=INTERFACE)
 
-# Set up egress classifier
-ipr.tc("add", "htb", iface, 0x10000)
+try:
+       # Set up egress classifier
+       ipr.tc("add", "htb", iface, 0x10000)
 
-# Root class
-ipr.tc("add-class", "htb", iface, 0x10001,
-       parent=0x10000,
-       rate="256kbit",  # TODO: Make these variable - set by user reservation
-       burst=1024 * 6)
+       # Root class
+       ipr.tc("add-class", "htb", iface, 0x10001,
+              parent=0x10000,
+              rate="256kbit",  # TODO: Make these variable - set by user reservation
+              burst=1024 * 6)
 
-# Sub classes
-ipr.tc("add-class", "htb", iface, 0x10010,
-       parent=0x10001,
-       rate="192kbit",
-       burst=1024 * 6,
-       prio=1)
-ipr.tc("add-class", "htb", iface, 0x10020,
-       parent=0x10001,
-       rate="128kbit",
-       burst=1024 * 6,
-       prio=2)
+       # Sub classes
+       ipr.tc("add-class", "htb", iface, 0x10010,
+              parent=0x10001,
+              rate="192kbit",
+              burst=1024 * 6,
+              prio=1)
+       ipr.tc("add-class", "htb", iface, 0x10020,
+              parent=0x10001,
+              rate="128kbit",
+              burst=1024 * 6,
+              prio=2)
 
-# Leaf queues
-ipr.tc("add", "pfifo_fast", iface, 0x100000,
-       parent=0x10010)
-ipr.tc("add", "pfifo_fast", iface, 0x200000,
-       parent=0x10020)
+       # Leaf queues
+       ipr.tc("add", "pfifo_fast", iface, 0x100000,
+              parent=0x10010)
+       ipr.tc("add", "pfifo_fast", iface, 0x200000,
+              parent=0x10020)
 
-# Add filter
-ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
-       name=bpf_filter_fn.name, parent=0x10000, action="ok")
+       # Add filter
+       ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
+              name=bpf_filter_fn.name, parent=0x10000, action="ok")
 
-# Set up ingress classifier
-ipr.tc("add", "ingress", iface, "ffff:")
-ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
-       name=bpf_rl_fn.name, parent="ffff:", action="ok", classid=1)
+       # Set up ingress classifier
+       ipr.tc("add", "ingress", iface, "ffff:")
+       ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
+              name=bpf_rl_fn.name, parent="ffff:", action="ok", classid=1)
+except Exception as e:
+     print(e)
 
 while True:
        time.sleep(OUTPUT_INTERVAL)
