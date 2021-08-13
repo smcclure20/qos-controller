@@ -47,13 +47,17 @@ class ReportProcess(multiprocessing.Process):
             usage[PRIORITY_FORMAT.format(stat[0])] = stat[1]
         # usage = {"name": "host1", "address": ADDRESS_FORMAT.format(ADDRESS_FORMA, PORT), "prio_0": 2.5, "prio_1": 15} # Index is priority level, data is gbps
         usage["name"] = "host1"
-        usage["address"] = ADDRESS_FORMAT.format(ADDRESS_FORMAT, PORT)
+        usage["address"] = ADDRESS_FORMAT.format(ADDRESS, PORT)
         self.current_usage = usage
 
     def send_usage(self):
-        r = requests.post('http://127.0.0.1:5000/usage', data=self.current_usage)
-        print("Sending usage:")
-        print(r.text)
+        try:
+            r = requests.post('http://127.0.0.1:5000/usage', data=self.current_usage)
+            print("Sending usage:")
+            print(r.text)
+        except Exception as e:
+            print("Failed connection.")
+            print(e)
 
 
 if __name__ == "__main__":
