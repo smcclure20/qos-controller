@@ -12,6 +12,7 @@
 #define ETH_HLEN 14
 
 BPF_ARRAY(priorities, u64, 32);
+BPF_ARRAY(hits, u64, 32);
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -49,8 +50,9 @@ int filter(struct __sk_buff *skb) {
 
   	LIMIT: ;
 		struct vxlan_t *vxlan = cursor_advance(cursor, sizeof(*vxlan));
-		// not this simple - if a split class, need to set class on every nth packet
+		// TODO not this simple - if a split class, need to set class on every nth packet
 		uint vni = vxlan->key;
+		hits.increment(vni)
 		u64* prio = priorities.lookup(&vni);
 		if (prio != NULL){
 		    skb->tc_classid = (__u32)*prio;
