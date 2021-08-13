@@ -1,6 +1,7 @@
 #include <uapi/linux/ptrace.h>
 #include <net/sock.h>
 #include <bcc/proto.h>
+#include <stdio.h>
 
 #define IP_TCP 	6
 #define IP_UDP 17
