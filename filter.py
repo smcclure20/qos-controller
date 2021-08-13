@@ -27,6 +27,10 @@ try:
        # Set up egress classifier
        ipr.tc("add", "htb", iface, 0x10000)
 
+except Exception as e:
+       print(e)
+
+try:
        # Root class
        ipr.tc("add-class", "htb", iface, 0x10001,
               parent=0x10000,
@@ -51,6 +55,10 @@ try:
        ipr.tc("add", "pfifo_fast", iface, 0x200000,
               parent=0x10020)
 
+except Exception as e:
+       print(e)
+
+try:
        # Add filter
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
               name=bpf_filter_fn.name, parent=0x10000, action="ok")
