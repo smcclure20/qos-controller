@@ -2,7 +2,6 @@ import requests
 import time
 from flask import Flask, request, Response, make_response
 import multiprocessing
-from filter import USAGE_FILE, PRIORITIES_FILE
 from tenant import PRIORITY_FORMAT
 
 app = Flask(__name__)
@@ -11,6 +10,8 @@ REPORTING_INTERVAL = 10
 ADDRESS = "127.0.0.1"
 PORT = 5001
 ADDRESS_FORMAT = "{}:{}"
+USAGE_FILE = "./usage"
+PRIORITIES_FILE = "./prios"
 
 @app.post('/priorities/')
 def set_priorities():

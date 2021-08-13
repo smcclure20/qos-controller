@@ -5,13 +5,12 @@ import socket
 import sys
 import time
 from ctypes import c_int, c_ulong, Array
+from host import USAGE_FILE, PRIORITIES_FILE
 
 # function to read from the count table
 # function to update tc
 
 OUTPUT_INTERVAL = 10
-USAGE_FILE = "./usage"
-PRIORITIES_FILE = "./prios"
 INTERFACE = "lo"
 
 ipr = IPRoute()
