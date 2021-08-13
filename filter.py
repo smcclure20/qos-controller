@@ -66,8 +66,9 @@ while True:
 
        packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
-              file.write(str(packet_cnt.items()))
-              file.write(str(packet_cnt.values()))
+              counts = [(x[0].value, x[1].value) for x in packet_cnt.items()]
+              file.write(str(counts))
+              # file.write(str(packet_cnt.values()))
        packet_cnt.clear()
 
        # TODO: Should probably reorder these
