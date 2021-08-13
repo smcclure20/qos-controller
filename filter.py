@@ -77,6 +77,6 @@ while True:
        with open(PRIORITIES_FILE, "r") as file:
               priorities = eval(file.read())
               print(priorities)
-              print(type(priorities.keys()[0]))
+              print(type(list(priorities.keys())[0]))
               # TODO: Make sure ordering of both lists is the same
               priority_table.items_update_batch(priorities.keys(), priorities.values())
