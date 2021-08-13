@@ -25,6 +25,14 @@ iface = ipr.link_lookup(ifname=INTERFACE)
 
 try:
        # Set up egress classifier
+       ipr.tc("del", "htb", iface, 0x10000)
+
+except Exception as e:
+       print("Failed to remove htb from interface.")
+       print(e)
+
+try:
+       # Set up egress classifier
        ipr.tc("add", "htb", iface, 0x10000)
 
 except Exception as e:
