@@ -4,7 +4,7 @@ from pyroute2 import IPRoute
 import socket
 import sys
 import time
-from ctypes import c_int, c_ulong
+from ctypes import c_int, c_ulong, Array
 
 # function to read from the count table
 # function to update tc
@@ -81,6 +81,10 @@ while True:
               'priorities')  # # Set the priorities based on instructions from the controller -> how to do the x% thing here?
        with open(PRIORITIES_FILE, "r") as file:
               priorities = eval(file.read())
+              ckeys = c_int * 32
+              cvalues = c_ulong * 32
+              for key in priorities.keys()
+                     ckeys
               keys = [c_int(x) for x in priorities.keys()]
               values = [c_ulong(x) for x in priorities.values()]
               # TODO: Make sure ordering of both lists is the same
