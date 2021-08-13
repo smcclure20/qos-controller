@@ -66,9 +66,9 @@ except Exception as e:
 
 try:
        # Set up ingress classifier
-       ipr.tc("add", "egress", iface, "ffff:")
+       # ipr.tc("add", "egress", iface, "ffff:")
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
-              name=bpf_rl_fn.name, parent="ffff:", action="ok")
+              name=bpf_rl_fn.name, parent=0x10000, action="ok")
 except Exception as e:
        print("Failed at 3")
        print(e)
