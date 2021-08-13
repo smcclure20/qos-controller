@@ -4,6 +4,7 @@ from pyroute2 import IPRoute
 import socket
 import sys
 import time
+from ctypes import c_int, c_ulong
 
 # function to read from the count table
 # function to update tc
@@ -78,15 +79,9 @@ while True:
        # TODO: Should probably reorder these
        priority_table = bpf_rl.get_table(
               'priorities')  # # Set the priorities based on instructions from the controller -> how to do the x% thing here?
-       test = priority_table.items()
-       for item in test:
-              print(type(item[0].value))
-              print(type(item[1].value))
-              break
        with open(PRIORITIES_FILE, "r") as file:
               priorities = eval(file.read())
-              print(priorities)
-              print(type(list(priorities.keys())[0]))
-              print(type(list(priorities.values())[0]))
+              keys = [c_int(x) for x in priorities.keys()]
+              values = [c_ulong(x) for x in priorities.values()]
               # TODO: Make sure ordering of both lists is the same
-              priority_table.items_update_batch(list(priorities.keys()), list(priorities.values()))
+              priority_table.items_update_batch(keys, values)
