@@ -28,6 +28,7 @@ try:
        ipr.tc("add", "htb", iface, 0x10000)
 
 except Exception as e:
+       print("Failed at 1")
        print(e)
 
 try:
@@ -56,6 +57,7 @@ try:
               parent=0x10020)
 
 except Exception as e:
+       print("Failed at 2")
        print(e)
 
 try:
@@ -68,7 +70,8 @@ try:
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
               name=bpf_rl_fn.name, parent="ffff:", action="ok")
 except Exception as e:
-     print(e)
+       print("Failed at 3")
+       print(e)
 
 while True:
        time.sleep(OUTPUT_INTERVAL)
