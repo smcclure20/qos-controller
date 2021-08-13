@@ -67,10 +67,6 @@ while True:
 
        packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
-              for item in packet_cnt.items():
-                     print(type(item[0].value))
-                     print(type(item[1].value))
-                     break
               counts = [(x[0].value, x[1].value) for x in packet_cnt.items()]
               file.write(str(counts))
               # file.write(str(packet_cnt.values()))
@@ -79,11 +75,14 @@ while True:
        # TODO: Should probably reorder these
        priority_table = bpf_rl.get_table(
               'priorities')  # # Set the priorities based on instructions from the controller -> how to do the x% thing here?
-       with open(PRIORITIES_FILE, "r") as file:
+       with open(PRIORITIES_FILE, "r") as file: # TODO: can do this all with tc filter updates if desperate
               priorities = eval(file.read())
-              keys = [x for x in priorities.keys()]
-              values = [x for x in priorities.values()]
-              ckeys = (c_int * 32)(*keys)
-              cvalues = (c_ulong * 32)(*values)
+              keys = [c_int(x) for x in priorities.keys()]
+              values = [c_ulong(x) for x in priorities.values()]
+              # ckeys = (c_int * 32)(*keys)
+              # cvalues = (c_ulong * 32)(*values)
               # TODO: Make sure ordering of both lists is the same
-              priority_table.items_update_batch(ckeys, cvalues)
+              for i, key in enumerate(keys):
+                     priority_table[i][0] = key
+                     priority_table[i][1] = values[i]
+              # priority_table.items_update_batch(ckeys, cvalues) TODO: this require kernel version 5.6
