@@ -66,6 +66,10 @@ while True:
 
        packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
+              for item in packet_cnt.items():
+                     print(type(item[0].value))
+                     print(type(item[0].value))
+                     break
               counts = [(x[0].value, x[1].value) for x in packet_cnt.items()]
               file.write(str(counts))
               # file.write(str(packet_cnt.values()))
@@ -73,7 +77,7 @@ while True:
 
        # TODO: Should probably reorder these
        priority_table = bpf_rl.get_table(
-              'priorities')  # Set the priorities based on instructions from the controller -> how to do the x% thing here?
+              'priorities')  # # Set the priorities based on instructions from the controller -> how to do the x% thing here?
        with open(PRIORITIES_FILE, "r") as file:
               priorities = eval(file.read())
               print(priorities)
