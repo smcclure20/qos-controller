@@ -89,4 +89,4 @@ while True:
               print(type(list(priorities.keys())[0]))
               print(type(list(priorities.values())[0]))
               # TODO: Make sure ordering of both lists is the same
-              priority_table.items_update_batch(priorities.keys(), priorities.values())
+              priority_table.items_update_batch(list(priorities.keys()), list(priorities.values()))
