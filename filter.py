@@ -28,7 +28,7 @@ try:
        ipr.tc("add", "htb", iface, 0x10000)
 
 except Exception as e:
-       print("Failed at 1")
+       print("Failed at adding HTB to interface.")
        print(e)
 
 try:
@@ -61,7 +61,7 @@ try:
               name=bpf_filter_fn.name, parent=0x10000, action="ok")
 
 except Exception as e:
-       print("Failed at 2")
+       print("Failed at creating the subclasses.")
        print(e)
 
 try:
@@ -70,7 +70,7 @@ try:
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
               name=bpf_rl_fn.name, parent=0x10000, action="ok")
 except Exception as e:
-       print("Failed at 3")
+       print("Failed at creating the tracing classifer.")
        print(e)
 
 while True:

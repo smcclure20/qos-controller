@@ -48,7 +48,6 @@ int filter(struct __sk_buff *skb) {
 
   	RECORD: ;
 		struct vxlan_t *vxlan = cursor_advance(cursor, sizeof(*vxlan));
-		counts.increment(31, vxlan->key);
 		counts.increment(vxlan->key, ip->tlen);
 		goto KEEP;
 
