@@ -56,14 +56,15 @@ try:
               name=bpf_filter_fn.name, parent=0x10000, action="ok")
 
        # Set up ingress classifier
-       ipr.tc("add", "ingress", iface, "ffff:")
+       ipr.tc("add", "egress", iface, "ffff:")
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
-              name=bpf_rl_fn.name, parent="ffff:", action="ok", classid=1)
+              name=bpf_rl_fn.name, parent="ffff:", action="ok")
 except Exception as e:
      print(e)
 
 while True:
        time.sleep(OUTPUT_INTERVAL)
+       print("Updating local data")
 
        packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
        with open(USAGE_FILE, "w") as file:
