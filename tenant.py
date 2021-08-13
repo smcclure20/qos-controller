@@ -2,7 +2,6 @@ from flask import Flask, request, Response, make_response
 import time
 import multiprocessing
 import requests
-from filter import PRIORITIES_FILE
 app = Flask(__name__)
 
 PRIO_BANDWIDTH = 10
@@ -42,9 +41,6 @@ class AggregationProcess(multiprocessing.Process):
             self.report_priorities()
             print("Updated priority traffic ratios:")
             print(self.final_priorities)
-
-            with open(PRIORITIES_FILE, "w") as file:
-                file.write(str(self.final_priorities))
 
     def aggregate_tenant(self):
         print("Checking queue")

@@ -2,7 +2,8 @@ import requests
 import time
 from flask import Flask, request, Response, make_response
 import multiprocessing
-from filter import USAGE_FILE
+from filter import USAGE_FILE, PRIORITIES_FILE
+from tenant import PRIORITY_FORMAT
 
 app = Flask(__name__)
 
@@ -15,6 +16,10 @@ ADDRESS_FORMAT = "{}:{}"
 def set_priorities():
     print("Received priority update")
     priorities = request.form.to_dict()
+
+    with open(PRIORITIES_FILE, "w") as file:
+        file.write(str(priorities))
+
     return make_response(request.form.to_dict())
 
 
@@ -33,10 +38,15 @@ class ReportProcess(multiprocessing.Process):
     def collect_usage(self):
         # Read BPF usage stats from file
         with open(USAGE_FILE, "r") as file:
-            usage_stats = file.read()
+            usage_stats = eval(file.read())
 
         print(usage_stats)
-        usage = {"name": "host1", "address": ADDRESS_FORMAT.format(ADDRESS, PORT), "prio_0": 2.5, "prio_1": 15} # Index is priority level, data is gbps
+        usage = {}
+        for stat in usage_stats:
+            usage[PRIORITY_FORMAT.format(stat[0])] = stat[1]
+        # usage = {"name": "host1", "address": ADDRESS_FORMAT.format(ADDRESS_FORMA, PORT), "prio_0": 2.5, "prio_1": 15} # Index is priority level, data is gbps
+        usage["name"] = "host1"
+        usage["address"] = ADDRESS_FORMAT.format(ADDRESS_FORMAT, PORT)
         self.current_usage = usage
 
     def send_usage(self):
