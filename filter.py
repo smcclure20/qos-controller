@@ -96,8 +96,8 @@ while True:
               'priorities')  # # Set the priorities based on instructions from the controller -> how to do the x% thing here?
        with open(PRIORITIES_FILE, "r") as file: # TODO: can do this all with tc filter updates if desperate
               priorities = eval(file.read())
-              keys = [c_int(x) for x in priorities.keys()]
-              values = [c_ulong(x) for x in priorities.values()]
+              keys = [c_int(int(x)) for x in priorities.keys()]
+              values = [c_ulong(int(x)) for x in priorities.values()]
               # ckeys = (c_int * 32)(*keys)
               # cvalues = (c_ulong * 32)(*values)
               # TODO: Make sure ordering of both lists is the same
