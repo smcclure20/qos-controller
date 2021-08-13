@@ -71,7 +71,7 @@ while True:
               counts = [(x[0].value, x[1].value) for x in packet_cnt.items()]
               file.write(str(counts))
               # file.write(str(packet_cnt.values()))
-       packet_cnt.clear()
+       # packet_cnt.clear()
 
        # TODO: Should probably reorder these
        priority_table = bpf_rl.get_table(
