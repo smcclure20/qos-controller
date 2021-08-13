@@ -56,15 +56,15 @@ try:
        ipr.tc("add", "pfifo_fast", iface, 0x200000,
               parent=0x10020)
 
+       # Add filter
+       ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
+              name=bpf_filter_fn.name, parent=0x10000, action="ok")
+
 except Exception as e:
        print("Failed at 2")
        print(e)
 
 try:
-       # Add filter
-       ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
-              name=bpf_filter_fn.name, parent=0x10000, action="ok")
-
        # Set up ingress classifier
        ipr.tc("add", "egress", iface, "ffff:")
        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
