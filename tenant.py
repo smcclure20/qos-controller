@@ -63,7 +63,7 @@ class AggregationProcess(multiprocessing.Process):
         remaining = PRIO_BANDWIDTH
         while priority in self.total_usage.keys() and remaining > 0:
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = min(int((remaining / float(self.total_usage[priority])) * 100), 100) if float(self.total_usage[priority]) > 0 else 100
-            self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(self.total_usage[priority] > remaining) + 1
+            self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(float(self.total_usage[priority]) > remaining) + 1
             remaining -= float(self.total_usage[priority])
             priority += 1
 
