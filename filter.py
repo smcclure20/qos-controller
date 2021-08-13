@@ -83,7 +83,7 @@ except Exception as e:
 while True:
        time.sleep(OUTPUT_INTERVAL)
        print("Updating local data")
-       
+
        hits = bpf_rl.get_table('hits')
        hit_counts = [(x[0].value, x[1].value) for x in hits.items()]
        print("Hits (vni, # of packets classified: ", hit_counts)
