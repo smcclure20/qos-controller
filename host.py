@@ -17,7 +17,11 @@ PRIORITIES_FILE = "./prios"
 def set_priorities():
     print("Received priority update")
     priorities = request.form.to_dict()
-
+    for key in priorities.keys():
+        priority_number = int(key.split("_")[-1])
+        priorities[priority_number] = priorities[key]
+        priorities.pop(key)
+        
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
 
