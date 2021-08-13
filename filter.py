@@ -83,6 +83,5 @@ while True:
               # cvalues = (c_ulong * 32)(*values)
               # TODO: Make sure ordering of both lists is the same
               for i, key in enumerate(keys):
-                     priority_table[i][0] = key
-                     priority_table[i][1] = values[i]
+                     priority_table[i] = (key, values[i])
               # priority_table.items_update_batch(ckeys, cvalues) TODO: this require kernel version 5.6
