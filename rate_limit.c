@@ -22,7 +22,7 @@ struct five_tuple {
 
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, struct five_tuple *);
+BPF_HASH(eligible_flows_bytes, struct five_tuple);
 BPF_HASH(eligible_flows_timestamp, struct five_tuple, u64);
 BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
