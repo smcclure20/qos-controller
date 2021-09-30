@@ -15,8 +15,8 @@
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
 BPF_HASH(eligible_flows_bytes, struct five_tuple *);
-BPF_HASH(eligible_flows_timestamp, struct five_tuple *, u64);
-BPF_HASH(split_flows, struct five_tuple *, int);
+BPF_HASH(eligible_flows_timestamp, struct five_tuple, u64);
+BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
 
 struct five_tuple {
@@ -25,7 +25,7 @@ struct five_tuple {
     unsigned char protocol;
     unsigned short sport;
     unsigned short dport;
-}
+};
 
 
 struct five_tuple parse_tuple(struct __sk_buff *skb){
@@ -55,7 +55,7 @@ struct five_tuple parse_tuple(struct __sk_buff *skb){
 	}
 
 	return tuple;
-};
+}
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -88,14 +88,14 @@ int filter(struct __sk_buff *skb) {
 		            // if in the split table, let through
 		            float* bw = split_bw.lookup((int*)prio);
 		            struct five_tuple tuple = parse_tuple(skb);
-		            u64* permitted = split_flows.lookup(&tuple);
+		            u64* permitted = split_flows.lookup(tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
 		                skb->tc_classid = 1;
 		            }
 		            else if (permitted != NULL && permitted == 0 && *bw > 0){
 		                // If the flow has been seen before but has not been promoted, it is still eligible
-		                eligible_flows_bytes.increment(tuple, (ip->tlen));
+		                eligible_flows_bytes.increment(&tuple, (ip->tlen));
 		                u64 *ts = eligible_flows_timestamp.lookup(&tuple);
 		                u64 now = bpf_ktime_get_ns(void);
 		                u64 *bytes = eligible_flows_bytes.lookup(&tuple);
