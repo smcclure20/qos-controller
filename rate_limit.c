@@ -1,7 +1,6 @@
 #include <uapi/linux/ptrace.h>
 #include <net/sock.h>
 #include <bcc/proto.h>
-#include <time.h>
 
 #define IP_TCP 	6
 #define IP_UDP 17
@@ -16,7 +15,7 @@
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
 BPF_HASH(eligible_flows_bytes, struct five_tuple *);
-BPF_HASH(eligible_flows_timestamp, struct five_tuple *, time_t);
+BPF_HASH(eligible_flows_timestamp, struct five_tuple *, u64);
 BPF_HASH(split_flows, struct five_tuple *, int);
 BPF_ARRAY(hits, u64, 32);
 
@@ -96,10 +95,10 @@ int filter(struct __sk_buff *skb) {
 		            else if (permitted != NULL && permitted == 0 && *bw > 0){
 		                // If the flow has been seen before but has not been promoted, it is still eligible
 		                eligible_flows_bytes.increment(tuple, (ip->tlen));
-		                time_t *ts = eligible_flows_timestamp.lookup(&tuple);
-		                time_t now = time(0);
+		                u64 *ts = eligible_flows_timestamp.lookup(&tuple);
+		                u64 now = bpf_ktime_get_ns(void);
 		                u64 *bytes = eligible_flows_bytes.lookup(&tuple);
-		                float flow_bw = (float) *bytes / (float)(*ts - now);
+		                float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
 		                if (*bw - flow_bw > 0){
 		                    int updated_permission = 1;
 		                    float updated_bw = *bw - flow_bw;
@@ -111,7 +110,7 @@ int filter(struct __sk_buff *skb) {
 		            else if (permitted == NULL && *bw > 0){
 		                // If the flow is completely new, add to eligible
 		                eligible_flows_bytes.update(tuple, &(ip->tlen));
-		                time_t now = time(0);
+		                u64 now = bpf_ktime_get_ns(void);
                         eligible_flows_timestamp.update(tuple, &now);
 		            }
 		        }
