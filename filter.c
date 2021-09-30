@@ -34,22 +34,13 @@ int filter(struct __sk_buff *skb) {
 
 	IP: ;
 		struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));  // IP header (datagram)
-	        switch (ip->nextp){
-			case 17: goto UDP;
-			default: goto DROP;
-		}
-
-	UDP: ;
-		struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
-		switch (udp->dport) {
-    			case 4789: goto RECORD;
-    			default: goto DROP;
-  		}
-
-  	RECORD: ;
-		struct vxlan_t *vxlan = cursor_advance(cursor, sizeof(*vxlan));
-		counts.increment(vxlan->key, ip->tlen);
-		goto KEEP;
+		    u8 tos = (u8) ip->tos;
+		    counts.increment(tos, ip->tlen);
+		    goto KEEP;
+//	        switch (ip->nextp){
+//			case 17: goto UDP;
+//			default: goto DROP;
+//		}
 
     KEEP:
         return TC_ACT_OK;

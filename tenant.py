@@ -29,6 +29,8 @@ class AggregationProcess(multiprocessing.Process):
         self.total_usage = {}
         self.final_priorities = {}
         self.current_hosts = []
+        self.split_class = None
+        self.split_fraction = None
 
     def run(self):
         print("Starting aggregation process")
@@ -57,25 +59,40 @@ class AggregationProcess(multiprocessing.Process):
     def clear_totals(self):
         self.total_usage.clear()
         self.current_hosts.clear()
+        self.split_class = None
+        self.split_fraction = None
 
     def calculate_priority(self):
         priority = 0
         remaining = PRIO_BANDWIDTH
         while priority in self.total_usage.keys() and remaining > 0:
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = min(int((remaining / float(self.total_usage[priority])) * 100), 100) if float(self.total_usage[priority]) > 0 else 100
-            self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(float(self.total_usage[priority]) > remaining) + 1
+            # self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(float(self.total_usage[priority]) <= remaining)
+            if float(self.total_usage[priority]) > remaining:
+                self.split_class = priority
+                self.split_fraction = remaining / float(self.total_usage[priority])
             remaining -= float(self.total_usage[priority])
             priority += 1
 
     def report_priorities(self):  # Report to hosts new ratios
         for address in self.current_hosts:
             try:
-                r = requests.post(PRIORITIES_URL.format(address), data=self.final_priorities)
+                r = requests.post(PRIORITIES_URL.format(address), data={"split_class": self.split_class, "split_fraction": self.split_fraction})
                 print("Sending priorities to {}:".format(address))
                 print(r.text)
             except Exception as e:
                 print(e)
                 print("Skipping this report.")
+
+    # def report_priorities(self):  # Report to hosts new ratios
+    #     for address in self.current_hosts:
+    #         try:
+    #             r = requests.post(PRIORITIES_URL.format(address), data=self.final_priorities)
+    #             print("Sending priorities to {}:".format(address))
+    #             print(r.text)
+    #         except Exception as e:
+    #             print(e)
+    #             print("Skipping this report.")
 
 
 if __name__ == '__main__':

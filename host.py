@@ -12,21 +12,40 @@ PORT = 5001
 ADDRESS_FORMAT = "{}:{}"
 USAGE_FILE = "./usage"
 PRIORITIES_FILE = "./prios"
+SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
+
+# TODO: create consistent parsing functions for format of the reports
 
 @app.post('/priorities/')
 def set_priorities():
     print("Received priority update")
-    priorities = request.form.to_dict()
-    keys = list(priorities.keys())
-    for key in keys:
-        priority_number = int(key.split("_")[-1])
-        priorities[priority_number] = priorities[key]
-        priorities.pop(key)
+    update = request.form.to_dict()
+    priorities = dict.fromkeys(range(0, 32), 1)
+    priorities[int(update["split_class"])] = 3
+    priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
 
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
 
+    with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
+        file.write(update["split_fraction"])
+
     return make_response(request.form.to_dict())
+
+# @app.post('/priorities/')
+# def set_priorities():
+#     print("Received priority update")
+#     priorities = request.form.to_dict()
+#     keys = list(priorities.keys())
+#     for key in keys:
+#         priority_number = int(key.split("_")[-1])
+#         priorities[priority_number] = priorities[key]
+#         priorities.pop(key)
+#
+#     with open(PRIORITIES_FILE, "w") as file:
+#         file.write(str(priorities))
+#
+#     return make_response(request.form.to_dict())
 
 
 class ReportProcess(multiprocessing.Process):
