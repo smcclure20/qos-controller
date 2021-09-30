@@ -28,7 +28,7 @@ struct five_tuple {
 }
 
 
-struct five_tuple* parse_tuple(struct __sk_buff *skb){
+struct five_tuple parse_tuple(struct __sk_buff *skb){
     struct five_tuple tuple;
 
     u8 *cursor = 0;
@@ -54,7 +54,7 @@ struct five_tuple* parse_tuple(struct __sk_buff *skb){
 
 	}
 
-	return &tuple;
+	return tuple;
 };
 
 /*eBPF program.
@@ -81,13 +81,13 @@ int filter(struct __sk_buff *skb) {
 		struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));  // IP header (datagram)
 	        u8 tos = (u8) ip->tos;
 	        hits.increment(tos);
-	        u64 tos_64 = (u64) ip->tos;
-	        u64* prio = priorities.lookup(&tos_64);
+	        int tos_int = (int) ip->tos;
+	        u64* prio = priorities.lookup(&tos_int);
 		    if (prio != NULL){
 		        if (*prio == SPLIT_PRIO){
 		            // if in the split table, let through
-		            float* bw = split_bw.lookup(prio);
-		            struct five_tuple *tuple = parse_tuple(skb);
+		            float* bw = split_bw.lookup((int*)prio);
+		            struct five_tuple tuple = parse_tuple(skb);
 		            u64* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
