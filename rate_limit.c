@@ -42,20 +42,20 @@ struct five_tuple* parse_tuple(struct __sk_buff *skb){
 	    struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
 	    tuple.protocol = IP_UDP;
 	    tuple.sport = udp->sport;
-	    tuple.dport = udp->dport
+	    tuple.dport = udp->dport;
 	}
 	else if (ip->nextp == IP_TCP){
 	    struct tcp_t *tcp = cursor_advance(cursor, sizeof(*tcp));
 	    tuple.protocol = IP_TCP;
 	    tuple.sport = tcp->src_port;
-	    tuple.dport = tcp->dst_port
+	    tuple.dport = tcp->dst_port;
 	}
 	else{ // must be icmp or invalid
 
 	}
 
 	return &tuple;
-}
+};
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -81,11 +81,12 @@ int filter(struct __sk_buff *skb) {
 		struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));  // IP header (datagram)
 	        u8 tos = (u8) ip->tos;
 	        hits.increment(tos);
-	        u64* prio = priorities.lookup(&tos);
+	        u64 tos_64 = (u64) ip->tos;
+	        u64* prio = priorities.lookup(&tos_64);
 		    if (prio != NULL){
 		        if (*prio == SPLIT_PRIO){
 		            // if in the split table, let through
-		            float* bw = split_bw.lookup(&prio);
+		            float* bw = split_bw.lookup(prio);
 		            struct five_tuple *tuple = parse_tuple(skb);
 		            u64* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
