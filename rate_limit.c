@@ -12,13 +12,6 @@
 */
 #define ETH_HLEN 14
 
-BPF_ARRAY(priorities, u64, 32);
-BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, struct five_tuple *);
-BPF_HASH(eligible_flows_timestamp, struct five_tuple, u64);
-BPF_HASH(split_flows, struct five_tuple, int);
-BPF_ARRAY(hits, u64, 32);
-
 struct five_tuple {
     unsigned int src;
     unsigned int dst;
@@ -26,6 +19,13 @@ struct five_tuple {
     unsigned short sport;
     unsigned short dport;
 };
+
+BPF_ARRAY(priorities, u64, 32);
+BPF_ARRAY(split_bw, float, 1);
+BPF_HASH(eligible_flows_bytes, struct five_tuple *);
+BPF_HASH(eligible_flows_timestamp, struct five_tuple, u64);
+BPF_HASH(split_flows, struct five_tuple, int);
+BPF_ARRAY(hits, u64, 32);
 
 
 struct five_tuple parse_tuple(struct __sk_buff *skb){
