@@ -1,7 +1,7 @@
+#include <linux/jhash.h>
 #include <uapi/linux/ptrace.h>
 #include <net/sock.h>
 #include <bcc/proto.h>
-#include "jhash.h"
 
 #define IP_TCP 	6
 #define IP_UDP 17
@@ -23,9 +23,9 @@ struct five_tuple {
 
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, u64);
-BPF_HASH(eligible_flows_timestamp, u64, u64);
-BPF_HASH(split_flows, u64, int);
+BPF_HASH(eligible_flows_bytes, u32);
+BPF_HASH(eligible_flows_timestamp, u32, u64);
+BPF_HASH(split_flows, u32, int);
 BPF_ARRAY(hits, u64, 32);
 
 /*eBPF program.
@@ -67,7 +67,7 @@ int filter(struct __sk_buff *skb) {
 	    tuple.sport = tcp->src_port;
 	    tuple.dport = tcp->dst_port;
 	}
-	u64 tuple_hash = jhash(tuple, sizeof(tuple));
+	u32 tuple_hash = (u32)jhash(tuple, sizeof(tuple),(u32)0);
 
 	hits.increment(tos);
 	u64* prio = priorities.lookup(&tos_int);
