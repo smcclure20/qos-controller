@@ -88,31 +88,31 @@ int filter(struct __sk_buff *skb) {
 		            // if in the split table, let through
 		            float* bw = split_bw.lookup((int*)prio);
 		            struct five_tuple tuple = parse_tuple(skb);
-		            u64* permitted = split_flows.lookup(tuple);
+		            u64* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
 		                skb->tc_classid = 1;
 		            }
 		            else if (permitted != NULL && permitted == 0 && *bw > 0){
 		                // If the flow has been seen before but has not been promoted, it is still eligible
-		                eligible_flows_bytes.increment(&tuple, (ip->tlen));
+		                eligible_flows_bytes.increment(tuple, (ip->tlen));
 		                u64 *ts = eligible_flows_timestamp.lookup(&tuple);
-		                u64 now = bpf_ktime_get_ns(void);
+		                u64 now = bpf_ktime_get_ns();
 		                u64 *bytes = eligible_flows_bytes.lookup(&tuple);
 		                float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
 		                if (*bw - flow_bw > 0){
 		                    int updated_permission = 1;
 		                    float updated_bw = *bw - flow_bw;
 		                    split_flows.update(&tuple, &updated_permission);
-		                    split_bw.update(&prio, &updated_bw);
+		                    split_bw.update((int*)prio, &updated_bw);
 		                    skb->tc_classid = 1;
 		                }
 		            }
 		            else if (permitted == NULL && *bw > 0){
 		                // If the flow is completely new, add to eligible
-		                eligible_flows_bytes.update(tuple, &(ip->tlen));
-		                u64 now = bpf_ktime_get_ns(void);
-                        eligible_flows_timestamp.update(tuple, &now);
+		                eligible_flows_bytes.update(&tuple, &(ip->tlen));
+		                u64 now = bpf_ktime_get_ns();
+                        eligible_flows_timestamp.update(&tuple, &now);
 		            }
 		        }
 		        else{
@@ -120,7 +120,6 @@ int filter(struct __sk_buff *skb) {
 		        }
 		    }
 		    goto KEEP;
-		}
 
     KEEP:
         return TC_ACT_OK;
