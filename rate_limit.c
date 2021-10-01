@@ -83,7 +83,7 @@ int filter(struct __sk_buff *skb) {
 		                // If the flow has been seen before but has not been promoted, it is still eligible
 		                eligible_flows_bytes.increment(tuple, (ip->tlen));
 		                u64 *ts = eligible_flows_timestamp.lookup(&tuple);
-		                u64 now = 0 //bpf_ktime_get_ns();
+		                u64 now = 0; //bpf_ktime_get_ns();
 		                u64 *bytes = eligible_flows_bytes.lookup(&tuple);
 		                float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
 		                if (*bw - flow_bw > 0){
@@ -98,7 +98,7 @@ int filter(struct __sk_buff *skb) {
 		                // If the flow is completely new, add to eligible
 		                u64 bytes = ip->tlen;
 		                eligible_flows_bytes.update(&tuple, &bytes);
-		                u64 now = 0//bpf_ktime_get_ns();
+		                u64 now = 0;//bpf_ktime_get_ns();
                         eligible_flows_timestamp.update(&tuple, &now);
 		            }
 		        }
