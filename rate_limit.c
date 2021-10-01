@@ -46,67 +46,67 @@ int filter(struct __sk_buff *skb) {
 	}
 
 	IP: ;
-	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
-
-	struct five_tuple tuple;
-	tuple.src = ip->src;
-	tuple.dst = ip->dst;
-	u8 tos = (u8) ip->tos;
-    int tos_int = (int) ip->tos;
-    unsigned short tlen = ip->tlen;
-
-	if (ip->nextp == IP_UDP){
-	    struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
-	    tuple.protocol = IP_UDP;
-	    tuple.sport = udp->sport;
-	    tuple.dport = udp->dport;
-	}
-	else if (ip->nextp == IP_TCP){
-	    struct tcp_t *tcp = cursor_advance(cursor, sizeof(*tcp));
-	    tuple.protocol = IP_TCP;
-	    tuple.sport = tcp->src_port;
-	    tuple.dport = tcp->dst_port;
-	}
-
-	hits.increment(tos);
-	u64* prio = priorities.lookup(&tos_int);
-	if (prio != NULL){
-	    if (*prio == SPLIT_PRIO){
-		    // if in the split table, let through
-		    float* bw = split_bw.lookup((int*)prio);
-		    int* permitted = split_flows.lookup(&tuple);
-		    if (permitted != NULL && *permitted == 1){
-		        // If the flow has already been permitted, classify accordingly
-		        skb->tc_classid = (__u32) 1;
-		    }
-		    else if (permitted != NULL && permitted == 0 && *bw > 0){
-		        // If the flow has been seen before but has not been promoted, it is still eligible
-		        eligible_flows_bytes.increment(tuple, tlen);
-		        u64 *ts = eligible_flows_timestamp.lookup(&tuple);
-		        u64 now = bpf_ktime_get_ns();
-		        u64 *bytes = eligible_flows_bytes.lookup(&tuple);
-		        float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
-		        if (*bw - flow_bw > 0){
-		            int updated_permission = 1;
-		            float updated_bw = *bw - flow_bw;
-		            split_flows.update(&tuple, &updated_permission);
-		            split_bw.update((int*)prio, &updated_bw);
-		            skb->tc_classid = (__u32)1;
-		        }
-		    }
-		    else if (permitted == NULL && *bw > 0){
-		        // If the flow is completely new, add to eligible
-		        u64 bytes = tlen;
-		        eligible_flows_bytes.update(&tuple, &bytes);
-		        u64 now = bpf_ktime_get_ns();
-                eligible_flows_timestamp.update(&tuple, &now);
-		    }
-		}
-		else{
-		    skb->tc_classid = (__u32)*prio;
-		}
-	}
-	goto KEEP;
+//	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
+//
+//	struct five_tuple tuple;
+//	tuple.src = ip->src;
+//	tuple.dst = ip->dst;
+//	u8 tos = (u8) ip->tos;
+//    int tos_int = (int) ip->tos;
+//    unsigned short tlen = ip->tlen;
+//
+//	if (ip->nextp == IP_UDP){
+//	    struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
+//	    tuple.protocol = IP_UDP;
+//	    tuple.sport = udp->sport;
+//	    tuple.dport = udp->dport;
+//	}
+//	else if (ip->nextp == IP_TCP){
+//	    struct tcp_t *tcp = cursor_advance(cursor, sizeof(*tcp));
+//	    tuple.protocol = IP_TCP;
+//	    tuple.sport = tcp->src_port;
+//	    tuple.dport = tcp->dst_port;
+//	}
+//
+//	hits.increment(tos);
+//	u64* prio = priorities.lookup(&tos_int);
+//	if (prio != NULL){
+//	    if (*prio == SPLIT_PRIO){
+//		    // if in the split table, let through
+//		    float* bw = split_bw.lookup((int*)prio);
+//		    int* permitted = split_flows.lookup(&tuple);
+//		    if (permitted != NULL && *permitted == 1){
+//		        // If the flow has already been permitted, classify accordingly
+//		        skb->tc_classid = (__u32) 1;
+//		    }
+//		    else if (permitted != NULL && permitted == 0 && *bw > 0){
+//		        // If the flow has been seen before but has not been promoted, it is still eligible
+//		        eligible_flows_bytes.increment(tuple, tlen);
+//		        u64 *ts = eligible_flows_timestamp.lookup(&tuple);
+//		        u64 now = bpf_ktime_get_ns();
+//		        u64 *bytes = eligible_flows_bytes.lookup(&tuple);
+//		        float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
+//		        if (*bw - flow_bw > 0){
+//		            int updated_permission = 1;
+//		            float updated_bw = *bw - flow_bw;
+//		            split_flows.update(&tuple, &updated_permission);
+//		            split_bw.update((int*)prio, &updated_bw);
+//		            skb->tc_classid = (__u32)1;
+//		        }
+//		    }
+//		    else if (permitted == NULL && *bw > 0){
+//		        // If the flow is completely new, add to eligible
+//		        u64 bytes = tlen;
+//		        eligible_flows_bytes.update(&tuple, &bytes);
+//		        u64 now = bpf_ktime_get_ns();
+//                eligible_flows_timestamp.update(&tuple, &now);
+//		    }
+//		}
+//		else{
+//		    skb->tc_classid = (__u32)*prio;
+//		}
+//	}
+//	goto KEEP;
 
     KEEP:
         return TC_ACT_OK;
