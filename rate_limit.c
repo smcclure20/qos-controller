@@ -111,7 +111,7 @@ int filter(struct __sk_buff *skb) {
 		            else if (permitted == NULL && *bw > 0){
 		                // If the flow is completely new, add to eligible
 		                u64 bytes = ip->tlen;
-		                eligible_flows_bytes.update(&tuple, *bytes);
+		                eligible_flows_bytes.update(&tuple, &bytes);
 		                u64 now = bpf_ktime_get_ns();
                         eligible_flows_timestamp.update(&tuple, &now);
 		            }
