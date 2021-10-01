@@ -28,13 +28,9 @@ BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
 
 
-static struct five_tuple parse_tuple(struct __sk_buff *skb, struct ethernet_t* ethernet, struct ip_t *ip){
+static struct five_tuple parse_tuple(struct ethernet_t* ethernet, struct ip_t *ip){
     struct five_tuple tuple;
 
-    u8 *cursor = 0;
-
-	ethernet = cursor_advance(cursor, sizeof(*ethernet));
-	ip = cursor_advance(cursor, sizeof(*ip));
 	unsigned int test = ip->src;
 	tuple.src = ip->src;
 	tuple.dst = ip->dst;
@@ -66,9 +62,11 @@ static struct five_tuple parse_tuple(struct __sk_buff *skb, struct ethernet_t* e
   return -1 -> KEEP the packet and return it to user space (userspace can read it from the socket_fd )
 */
 int filter(struct __sk_buff *skb) {
-    struct ethernet_t *ethernet;
-    struct ip_t *ip;
-    struct five_tuple tuple = parse_tuple(*skb, ethernet, ip);
+    u8 *cursor = 0;
+
+	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
+	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
+    struct five_tuple tuple = parse_tuple(ethernet, ip);
 
 	//filter IP packets (ethernet type = 0x0800) 0x0800 is IPv4 packet
 	switch(ethernet->type){
