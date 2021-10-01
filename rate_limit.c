@@ -35,6 +35,7 @@ static struct five_tuple parse_tuple(struct __sk_buff *skb, struct ethernet_t* e
 
 	ethernet = cursor_advance(cursor, sizeof(*ethernet));
 	ip = cursor_advance(cursor, sizeof(*ip));
+	unsigned int test = ip->src;
 	tuple.src = ip->src;
 	tuple.dst = ip->dst;
 
