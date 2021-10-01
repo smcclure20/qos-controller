@@ -28,13 +28,13 @@ BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
 
 
-static struct five_tuple parse_tuple(struct __sk_buff *skb){
+static struct five_tuple parse_tuple(struct __sk_buff *skb, struct ethernet_t* ethernet, struct ip_t *ip){
     struct five_tuple tuple;
 
     u8 *cursor = 0;
 
-	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
-	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
+	ethernet = cursor_advance(cursor, sizeof(*ethernet));
+	ip = cursor_advance(cursor, sizeof(*ip));
 	tuple.src = ip->src;
 	tuple.dst = ip->dst;
 
@@ -65,10 +65,9 @@ static struct five_tuple parse_tuple(struct __sk_buff *skb){
   return -1 -> KEEP the packet and return it to user space (userspace can read it from the socket_fd )
 */
 int filter(struct __sk_buff *skb) {
-    struct __sk_buff *skb_cpy = skb;
-	u8 *cursor = 0;
-
-	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
+    struct ethernet_t ethernet;
+    struct ip_t ip;
+    struct five_tuple tuple = parse_tuple(skb_cpy, &ethernet, &ip);
 
 	//filter IP packets (ethernet type = 0x0800) 0x0800 is IPv4 packet
 	switch(ethernet->type){
@@ -78,7 +77,6 @@ int filter(struct __sk_buff *skb) {
 
 
 	IP: ;
-		struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));  // IP header (datagram)
 	        u8 tos = (u8) ip->tos;
 	        hits.increment(tos);
 	        int tos_int = (int) ip->tos;
@@ -87,7 +85,6 @@ int filter(struct __sk_buff *skb) {
 		        if (*prio == SPLIT_PRIO){
 		            // if in the split table, let through
 		            float* bw = split_bw.lookup((int*)prio);
-		            struct five_tuple tuple = parse_tuple(skb_cpy);
 		            int* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
