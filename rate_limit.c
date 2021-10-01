@@ -1,6 +1,7 @@
 #include <uapi/linux/ptrace.h>
 #include <net/sock.h>
 #include <bcc/proto.h>
+#include "jhash.h"
 
 #define IP_TCP 	6
 #define IP_UDP 17
@@ -22,11 +23,10 @@ struct five_tuple {
 
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, struct five_tuple);
-BPF_HASH(eligible_flows_timestamp, struct five_tuple, u64);
-BPF_HASH(split_flows, struct five_tuple, int);
+BPF_HASH(eligible_flows_bytes, u64);
+BPF_HASH(eligible_flows_timestamp, u64, u64);
+BPF_HASH(split_flows, u64, int);
 BPF_ARRAY(hits, u64, 32);
-
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -67,6 +67,7 @@ int filter(struct __sk_buff *skb) {
 	    tuple.sport = tcp->src_port;
 	    tuple.dport = tcp->dst_port;
 	}
+	u64 tuple_hash = jhash(tuple, sizeof(tuple));
 
 	hits.increment(tos);
 	u64* prio = priorities.lookup(&tos_int);
@@ -77,22 +78,22 @@ int filter(struct __sk_buff *skb) {
 		    if (bw == NULL){
 		        *bw = 0;
 		    }
-		    int* permitted = split_flows.lookup(&tuple);
+		    int* permitted = split_flows.lookup(&tuple_hash);
 		    if (permitted != NULL && *permitted == 1){
 		        // If the flow has already been permitted, classify accordingly
 		        skb->tc_classid = (__u32) 1;
 		    }
 		    else if (permitted != NULL && permitted == 0 && *bw > 0){
 		        // If the flow has been seen before but has not been promoted, it is still eligible
-		        eligible_flows_bytes.increment(tuple, tlen);
-		        u64 *ts = eligible_flows_timestamp.lookup(&tuple);
+		        eligible_flows_bytes.increment(tuple_hash, tlen);
+		        u64 *ts = eligible_flows_timestamp.lookup(&tuple_hash);
 		        u64 now = bpf_ktime_get_ns();
-		        u64 *bytes = eligible_flows_bytes.lookup(&tuple);
+		        u64 *bytes = eligible_flows_bytes.lookup(&tuple_hash);
 		        float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
 		        if (*bw - flow_bw > 0){
 		            int updated_permission = 1;
 		            float updated_bw = *bw - flow_bw;
-		            split_flows.update(&tuple, &updated_permission);
+		            split_flows.update(&tuple_hash, &updated_permission);
 		            split_bw.update((int*)prio, &updated_bw);
 		            skb->tc_classid = (__u32)1;
 		        }
@@ -100,9 +101,9 @@ int filter(struct __sk_buff *skb) {
 		    else if (permitted == NULL && *bw > 0){
 		        // If the flow is completely new, add to eligible
 		        u64 bytes = (u64) tlen;
-		        eligible_flows_bytes.update(&tuple, &bytes);
+		        eligible_flows_bytes.update(&tuple_hash, &bytes);
 		        u64 now = bpf_ktime_get_ns();
-                eligible_flows_timestamp.update(&tuple, &now);
+                eligible_flows_timestamp.update(&tuple_hash, &now);
 		    }
 		}
 		else{
