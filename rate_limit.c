@@ -68,7 +68,7 @@ static struct five_tuple parse_tuple(struct __sk_buff *skb, struct ethernet_t* e
 int filter(struct __sk_buff *skb) {
     struct ethernet_t *ethernet;
     struct ip_t *ip;
-    struct five_tuple tuple = parse_tuple(skb, ethernet, ip);
+    struct five_tuple tuple = parse_tuple(*skb, ethernet, ip);
 
 	//filter IP packets (ethernet type = 0x0800) 0x0800 is IPv4 packet
 	switch(ethernet->type){
