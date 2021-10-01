@@ -28,10 +28,20 @@ BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
 
 
-static struct five_tuple parse_tuple(struct ethernet_t* ethernet, struct ip_t *ip){
-    struct five_tuple tuple;
+/*eBPF program.
+  Filter TCP/UDP/ICMP packets, having payload not empty
+  if the program is loaded as PROG_TYPE_SOCKET_FILTER
+  and attached to a socket
+  return  0 -> DROP the packet
+  return -1 -> KEEP the packet and return it to user space (userspace can read it from the socket_fd )
+*/
+int filter(struct __sk_buff *skb) {
+    u8 *cursor = 0;
 
-	unsigned int test = ip->src;
+	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
+	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
+
+	struct five_tuple tuple;
 	tuple.src = ip->src;
 	tuple.dst = ip->dst;
 
@@ -47,26 +57,6 @@ static struct five_tuple parse_tuple(struct ethernet_t* ethernet, struct ip_t *i
 	    tuple.sport = tcp->src_port;
 	    tuple.dport = tcp->dst_port;
 	}
-	else{ // must be icmp or invalid
-
-	}
-
-	return tuple;
-}
-
-/*eBPF program.
-  Filter TCP/UDP/ICMP packets, having payload not empty
-  if the program is loaded as PROG_TYPE_SOCKET_FILTER
-  and attached to a socket
-  return  0 -> DROP the packet
-  return -1 -> KEEP the packet and return it to user space (userspace can read it from the socket_fd )
-*/
-int filter(struct __sk_buff *skb) {
-    u8 *cursor = 0;
-
-	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
-	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
-    struct five_tuple tuple = parse_tuple(ethernet, ip);
 
 	//filter IP packets (ethernet type = 0x0800) 0x0800 is IPv4 packet
 	switch(ethernet->type){
