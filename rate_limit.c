@@ -65,7 +65,7 @@ static struct five_tuple parse_tuple(struct __sk_buff *skb){
   return -1 -> KEEP the packet and return it to user space (userspace can read it from the socket_fd )
 */
 int filter(struct __sk_buff *skb) {
-
+    struct __sk_buff *skb_cpy = skb;
 	u8 *cursor = 0;
 
 	struct ethernet_t *ethernet = cursor_advance(cursor, sizeof(*ethernet));
@@ -87,7 +87,7 @@ int filter(struct __sk_buff *skb) {
 		        if (*prio == SPLIT_PRIO){
 		            // if in the split table, let through
 		            float* bw = split_bw.lookup((int*)prio);
-		            struct five_tuple tuple = parse_tuple(skb);
+		            struct five_tuple tuple = parse_tuple(skb_cpy);
 		            int* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
