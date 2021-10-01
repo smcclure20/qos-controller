@@ -77,7 +77,7 @@ int filter(struct __sk_buff *skb) {
 		    int* permitted = split_flows.lookup(&tuple);
 		    if (permitted != NULL && *permitted == 1){
 		        // If the flow has already been permitted, classify accordingly
-		        skb->tc_classid = 1;
+		        skb->tc_classid = (__u32) 1;
 		    }
 		    else if (permitted != NULL && permitted == 0 && *bw > 0){
 		        // If the flow has been seen before but has not been promoted, it is still eligible
@@ -91,7 +91,7 @@ int filter(struct __sk_buff *skb) {
 		            float updated_bw = *bw - flow_bw;
 		            split_flows.update(&tuple, &updated_permission);
 		            split_bw.update((int*)prio, &updated_bw);
-		            skb->tc_classid = 1;
+		            skb->tc_classid = (__u32)1;
 		        }
 		    }
 		    else if (permitted == NULL && *bw > 0){
