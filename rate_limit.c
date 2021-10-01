@@ -46,28 +46,28 @@ int filter(struct __sk_buff *skb) {
 	}
 
 	IP: ;
-//	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
-//
-//	struct five_tuple tuple;
-//	tuple.src = ip->src;
-//	tuple.dst = ip->dst;
-//	u8 tos = (u8) ip->tos;
-//    int tos_int = (int) ip->tos;
-//    unsigned short tlen = ip->tlen;
-//
-//	if (ip->nextp == IP_UDP){
-//	    struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
-//	    tuple.protocol = IP_UDP;
-//	    tuple.sport = udp->sport;
-//	    tuple.dport = udp->dport;
-//	}
-//	else if (ip->nextp == IP_TCP){
-//	    struct tcp_t *tcp = cursor_advance(cursor, sizeof(*tcp));
-//	    tuple.protocol = IP_TCP;
-//	    tuple.sport = tcp->src_port;
-//	    tuple.dport = tcp->dst_port;
-//	}
-//
+	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
+
+	struct five_tuple tuple;
+	tuple.src = ip->src;
+	tuple.dst = ip->dst;
+	u8 tos = (u8) ip->tos;
+    int tos_int = (int) ip->tos;
+    unsigned short tlen = ip->tlen;
+
+	if (ip->nextp == IP_UDP){
+	    struct udp_t *udp = cursor_advance(cursor, sizeof(*udp));
+	    tuple.protocol = IP_UDP;
+	    tuple.sport = udp->sport;
+	    tuple.dport = udp->dport;
+	}
+	else if (ip->nextp == IP_TCP){
+	    struct tcp_t *tcp = cursor_advance(cursor, sizeof(*tcp));
+	    tuple.protocol = IP_TCP;
+	    tuple.sport = tcp->src_port;
+	    tuple.dport = tcp->dst_port;
+	}
+
 //	hits.increment(tos);
 //	u64* prio = priorities.lookup(&tos_int);
 //	if (prio != NULL){
@@ -106,7 +106,7 @@ int filter(struct __sk_buff *skb) {
 //		    skb->tc_classid = (__u32)*prio;
 //		}
 //	}
-//	goto KEEP;
+	goto KEEP;
 
     KEEP:
         return TC_ACT_OK;
