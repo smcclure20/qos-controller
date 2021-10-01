@@ -67,7 +67,7 @@ int filter(struct __sk_buff *skb) {
 	    tuple.sport = tcp->src_port;
 	    tuple.dport = tcp->dst_port;
 	}
-	u32 tuple_hash = (u32)jhash(tuple, sizeof(tuple),(u32)0);
+	u32 tuple_hash = (u32)jhash(&tuple, sizeof(tuple),(u32)0);
 
 	hits.increment(tos);
 	u64* prio = priorities.lookup(&tos_int);
