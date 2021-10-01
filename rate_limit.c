@@ -28,7 +28,7 @@ BPF_HASH(split_flows, struct five_tuple, int);
 BPF_ARRAY(hits, u64, 32);
 
 
-struct five_tuple parse_tuple(struct __sk_buff *skb){
+static struct five_tuple parse_tuple(struct __sk_buff *skb){
     struct five_tuple tuple;
 
     u8 *cursor = 0;
@@ -88,7 +88,7 @@ int filter(struct __sk_buff *skb) {
 		            // if in the split table, let through
 		            float* bw = split_bw.lookup((int*)prio);
 		            struct five_tuple tuple = parse_tuple(skb);
-		            u64* permitted = split_flows.lookup(&tuple);
+		            int* permitted = split_flows.lookup(&tuple);
 		            if (permitted != NULL && *permitted == 1){
 		                // If the flow has already been permitted, classify accordingly
 		                skb->tc_classid = 1;
@@ -110,7 +110,7 @@ int filter(struct __sk_buff *skb) {
 		            }
 		            else if (permitted == NULL && *bw > 0){
 		                // If the flow is completely new, add to eligible
-		                eligible_flows_bytes.update(&tuple, &(ip->tlen));
+		                eligible_flows_bytes.update(&tuple, (u64*)(ip->tlen));
 		                u64 now = bpf_ktime_get_ns();
                         eligible_flows_timestamp.update(&tuple, &now);
 		            }
