@@ -4,7 +4,7 @@ import multiprocessing
 import requests
 app = Flask(__name__)
 
-PRIO_BANDWIDTH = 10
+PRIO_BANDWIDTH = 128000
 PRIORITY_FORMAT = "prio_{}"
 PRIORITY_NAME_FORMAT = "{}_prio_{}"
 AGGREGATION_INTERVAL = 10
