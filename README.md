@@ -10,3 +10,5 @@
 
 `iperf3 -c <server> -t <time> -S <tos> -b <bw>` for a large volume of traffic. Note that iperf treats
 -S as the dscp field, so the last two bits (ECN) are ignored.
+
+https://linuxconfig.org/configuring-virtual-network-interfaces-in-linux
