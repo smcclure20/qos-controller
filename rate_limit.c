@@ -69,7 +69,7 @@ int filter(struct __sk_buff *skb) {
 	}
 	u32 tuple_hash = (u32)jhash(&tuple, sizeof(tuple),(u32)0);
 
-	hits.increment(tos);
+	hits.increment(tos_int);
 	u64* prio = priorities.lookup(&tos_int);
 	if (prio != NULL){
 	    if (*prio == SPLIT_PRIO){

@@ -35,7 +35,7 @@ int filter(struct __sk_buff *skb) {
 	IP: ;
 		struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));  // IP header (datagram)
 		    u8 tos = (u8) ip->tos;
-		    counts.increment(tos, ip->tlen);
+		    counts.increment((int)tos, ip->tlen);
 		    goto KEEP;
 //	        switch (ip->nextp){
 //			case 17: goto UDP;
