@@ -120,7 +120,10 @@ while True:
 
     with open(SPLIT_CLASS_BW_CAP_FILE, "r") as file:
         bandwidth = float(file.read())
-        bw_table[0] = c_float(bandwidth)
+        if bandwidth:
+            bw_table[0] = c_float(bandwidth)
+        else:
+            bw_table[0] = c_float(0)
 
     # Set the priorities based on instructions from the controller
     with open(PRIORITIES_FILE, "r") as file: # TODO: can do this all with tc filter updates if desperate

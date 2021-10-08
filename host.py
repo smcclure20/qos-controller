@@ -21,14 +21,15 @@ def set_priorities():
     print("Received priority update")
     update = request.form.to_dict()
     priorities = dict.fromkeys(range(0, 32), 1)
-    priorities[int(update["split_class"])] = 3
-    priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
+    if "split_class" in update:
+        priorities[int(update["split_class"])] = 3
+        priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
+
+        with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
+            file.write(update["split_fraction"])
 
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
-
-    with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-        file.write(update["split_fraction"])
 
     return make_response(request.form.to_dict())
 
