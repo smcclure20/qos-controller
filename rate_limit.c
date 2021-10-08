@@ -83,7 +83,7 @@ int filter(struct __sk_buff *skb) {
 		    if (permitted != NULL && *permitted == 1){
 		        // If the flow has already been permitted, classify accordingly
 		        skb->tc_classid = (__u32) 1;
-		        ip->tos = (u8) 1;
+		        ip->tos = (u8) 4;
 		    }
 		    else if (permitted != NULL && permitted == 0 && *bw > 0){
 		        // If the flow has been seen before but has not been promoted, it is still eligible
@@ -98,7 +98,7 @@ int filter(struct __sk_buff *skb) {
 		            split_flows.insert(&tuple_hash, &updated_permission);
 		            split_bw.update(&bw_lk, &updated_bw);
 		            skb->tc_classid = (__u32)1;
-		            ip->tos = (u8) 1;
+		            ip->tos = (u8) 4;
 		        }
 		    }
 		    else if(permitted == NULL){ // TODO: how to add bw >0 without breaking things
@@ -112,8 +112,8 @@ int filter(struct __sk_buff *skb) {
 		    }
 		}
 		else{
-		    skb->tc_classid = (__u32) 2;
-		    ip->tos = (u8) 2;
+		    skb->tc_classid = (__u32) *prio;
+		    ip->tos = (u8) (*prio + 3); // priority 1 -> DSCP 4 (2 -> 5)
 		}
 	}
 	hits.increment(ip->tos);
