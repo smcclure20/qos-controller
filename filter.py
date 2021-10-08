@@ -96,7 +96,7 @@ while True:
 
     hits = bpf_rl.get_table('hits')
     hit_counts = [(x[0].value, x[1].value) for x in hits.items()]
-    print("Hits (vni, # of packets classified in rate limiter on TOS): ", hit_counts)
+    print("Hits (tos, # of packets classified in rate limiter): ", hit_counts)
 
     bandwidths = []
     counts = []
