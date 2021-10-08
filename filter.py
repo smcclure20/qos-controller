@@ -11,7 +11,7 @@ from host import USAGE_FILE, PRIORITIES_FILE, SPLIT_CLASS_BW_CAP_FILE
 # function to update tc
 
 OUTPUT_INTERVAL = 10
-INTERFACE = "lo"
+INTERFACE = "eth0" #"lo"
 TOTAL_RATE = 256
 STARTING_HI_PRI = 128
 RATE_FORMAT = "{}kbit"
