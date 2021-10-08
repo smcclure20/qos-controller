@@ -23,7 +23,7 @@ struct five_tuple {
 
 BPF_ARRAY(priorities, u64, 32);
 BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, u32);
+BPF_HASH(eligible_flows_bytes, u32, u64);
 BPF_HASH(eligible_flows_timestamp, u32, u64);
 BPF_HASH(split_flows, u32, int);
 BPF_ARRAY(hits, u64, 32);
@@ -74,9 +74,11 @@ int filter(struct __sk_buff *skb) {
 	if (prio != NULL){
 	    if (*prio == SPLIT_PRIO){
 		    // if in the split table, let through
-		    float* bw = split_bw.lookup((int*)prio);
+		    int bw_lk = 0;
+		    float* bw = split_bw.lookup(&bw_lk);
 		    if (bw == NULL){
-		        *bw = 0;
+			float default_bw = 0.0;
+		        bw = &default_bw;
 		    }
 		    int* permitted = split_flows.lookup(&tuple_hash);
 		    if (permitted != NULL && *permitted == 1){
@@ -93,17 +95,19 @@ int filter(struct __sk_buff *skb) {
 		        if (*bw - flow_bw > 0){
 		            int updated_permission = 1;
 		            float updated_bw = *bw - flow_bw;
-		            split_flows.update(&tuple_hash, &updated_permission);
-		            split_bw.update((int*)prio, &updated_bw);
+		            split_flows.insert(&tuple_hash, &updated_permission);
+		            split_bw.update(&bw_lk, &updated_bw);
 		            skb->tc_classid = (__u32)1;
 		        }
 		    }
-		    else if (permitted == NULL && *bw > 0){
+		    else if(permitted == NULL){ // TODO: how to add bw >0 without breaking things
 		        // If the flow is completely new, add to eligible
-		        u64 bytes = (u64) tlen;
-		        eligible_flows_bytes.update(&tuple_hash, &bytes);
-		        u64 now = bpf_ktime_get_ns();
-                eligible_flows_timestamp.update(&tuple_hash, &now);
+			int default_permit = 0;
+			split_flows.insert(&tuple_hash, &default_permit);
+		        u64 bytes_update = (u64) tlen;
+		        eligible_flows_bytes.insert(&tuple_hash, &bytes_update);
+		        u64 now_ts = bpf_ktime_get_ns();
+                	eligible_flows_timestamp.insert(&tuple_hash, &now_ts);
 		    }
 		}
 		else{
