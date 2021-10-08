@@ -74,6 +74,14 @@ class AggregationProcess(multiprocessing.Process):
             remaining -= float(self.total_usage[priority])
             priority += 1
 
+        # If not overusing the bandwidth, split traffic class is the lowest priority one
+        if self.split_class is None:
+            priority = len(self.total_usage.keys()) - 1
+            while float(self.total_usage[priority])  == 0:
+                priority -= 1
+            self.split_class = priority
+            self.split_fraction =
+
     def report_priorities(self):  # Report to hosts new ratios
         for address in self.current_hosts:
             try:

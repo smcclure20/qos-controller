@@ -25,8 +25,12 @@ def set_priorities():
         priorities[int(update["split_class"])] = 3
         priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
 
+        bws = 0
+        while not usage_queue.empty():
+            bws = usage_queue.get()
+
         with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-            file.write(update["split_fraction"])
+            file.write(update["split_fraction"] * bws[PRIORITY_FORMAT.format(int(update["split_class"]))])
 
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
@@ -50,9 +54,10 @@ def set_priorities():
 
 
 class ReportProcess(multiprocessing.Process):
-    def __init__(self):
+    def __init__(self, usage_queue):
         multiprocessing.Process.__init__(self)
         self.current_usage = {}
+        self.usage_queue = usage_queue
 
     def run(self):
         print("Starting reporting process")
@@ -76,6 +81,7 @@ class ReportProcess(multiprocessing.Process):
         self.current_usage = usage
 
     def send_usage(self):
+        self.usage_queue.put(self.current_usage)
         try:
             r = requests.post('http://127.0.0.1:5000/usage', data=self.current_usage)
             print("Sending usage:")
@@ -86,6 +92,7 @@ class ReportProcess(multiprocessing.Process):
 
 
 if __name__ == "__main__":
-    report_task = ReportProcess()
+    usage_queue = multiprocessing.Queue()
+    report_task = ReportProcess(usage_queue)
     report_task.start()
     app.run(port=PORT, host=ADDRESS)
