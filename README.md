@@ -6,6 +6,7 @@
 
 `python3 ./tenant.py` to aggregate and report limits
 
-`python3 ./test-traffic.py` for some small amount of traffic
+`sudo python ./test-traffic.py` for some small amount of traffic
 
-TODO for large volume
+`iperf3 -c <server> -t <time> -S <tos> -b <bw>` for a large volume of traffic. Note that iperf treats
+-S as the dscp field, so the last two bits (ECN) are ignored.
