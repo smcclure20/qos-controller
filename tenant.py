@@ -79,10 +79,9 @@ class AggregationProcess(multiprocessing.Process):
             priority = len(self.total_usage.keys()) - 1
             while float(self.total_usage[priority]) == 0:
                 priority -= 1
-            self.split_class = priority
-            self.split_fraction = remaining / float(self.total_usage[priority])
+            self.split_class = priority if priority > 0 else 0
+            self.split_fraction = remaining / float(self.total_usage[self.split_class])
 
-        print("split class:", self.split_class)
 
     def report_priorities(self):  # Report to hosts new ratios
         for address in self.current_hosts:
