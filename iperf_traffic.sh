@@ -1,6 +1,11 @@
 #!/bin/bash
-# TODO: Make this actually runable
-# Server command: iperf3 -s -p <each port>
+
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5021 -D
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5022 -D
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5023 -D
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5024 -D
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5025 -D
+
 rm prio1.out
 rm prio2.out
 rm prio3.1.out
@@ -18,3 +23,5 @@ iperf3 -c 10.4.0.5  -t 100 -S 0x06 -b 3K --logfile prio3.2.out -p 5024 &
 
 # Should be low priority
 iperf3 -c 10.4.0.5  -t 100 -S 0x07 -b 200K --logfile prio4.out -p 5025
+
+ssh -i ../receiver_key.pem azureuser@20.112.15.215 pkill iperf
