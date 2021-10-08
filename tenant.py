@@ -42,7 +42,7 @@ class AggregationProcess(multiprocessing.Process):
             self.calculate_priority()
             self.report_priorities()
             print("Updated priority traffic ratios:")
-            print(self.final_priorities)
+            print("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
     def aggregate_tenant(self):
         print("Checking queue")

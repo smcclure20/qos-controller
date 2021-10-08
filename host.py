@@ -30,7 +30,7 @@ def set_priorities():
             bws = usage_queue.get()
 
         with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-            file.write(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
+            file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
 
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
