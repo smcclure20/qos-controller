@@ -77,9 +77,9 @@ class AggregationProcess(multiprocessing.Process):
         # If not overusing the bandwidth, split traffic class is the lowest priority one
         if self.split_class is None:
             priority = len(self.total_usage.keys()) - 1
-            while float(self.total_usage[priority]) == 0:
+            while priority > 0 and float(self.total_usage[priority]) == 0:
                 priority -= 1
-            self.split_class = priority if priority > 0 else 0
+            self.split_class = priority
             self.split_fraction = remaining / float(self.total_usage[self.split_class])
 
 
