@@ -12,6 +12,12 @@ rm results/prio3.1.out
 rm results/prio3.2.out
 rm results/prio4.out
 
+touch results/prio1.out
+touch results/prio2.out
+touch results/prio3.1.out
+touch results/prio3.2.out
+touch results/prio4.out
+
 echo "Starting iperf traffic..."
 # First few high priority flows
 iperf3 -c 10.4.0.5  -t 100 -S 0x04 -b 10K --logfile results/prio1.out -p 5021 &
