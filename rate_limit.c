@@ -70,6 +70,8 @@ int filter(struct __sk_buff *skb) {
 	}
 	u32 tuple_hash = (u32)jhash(&tuple, sizeof(tuple),(u32)0);
     u32 tc_class = 0;
+    skb->tc_classid = (__u32) 3;
+	tc_class = (u32)3;
 	u64* prio = priorities.lookup(&tos_int);
 	if (prio != NULL){
 	    if (*prio == SPLIT_PRIO){
@@ -87,7 +89,7 @@ int filter(struct __sk_buff *skb) {
 		        tc_class = (u32)*prio;
 		        //ip->tos = (u8) 4;
 		    }
-		    else if (permitted != NULL && permitted == 0 && *bw > 0){
+		    else if (permitted != NULL && permitted == 0 && *bw > 0){  // TODO: THIS IS NOT WORKING!!!!!!
 		        // If the flow has been seen before but has not been promoted, it is still eligible
 		        eligible_flows_bytes.increment(tuple_hash, tlen);
 		        u64 *ts = eligible_flows_timestamp.lookup(&tuple_hash);

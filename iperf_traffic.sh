@@ -30,7 +30,7 @@ iperf3 -c 10.4.0.5  -t 100 -S 0x0C -b 3K --logfile results/prio3.1.out -p 5023
 echo "Sleep for 2"
 sleep 2
 echo "30kbps to 5024"
-iperf3 -c 10.4.0.5  -t 100 -S 0x0C -b 30K --logfile results/prio3.2.out -p 5024 &
+iperf3 -c 10.4.0.5  -t 100 -S 0x0C -b 50K --logfile results/prio3.2.out -p 5024 &
 
 # Should be low priority
 echo "50kbps to 5025"
