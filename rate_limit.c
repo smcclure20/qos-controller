@@ -127,7 +127,7 @@ int filter(struct __sk_buff *skb) {
 		}
 	}
 	int port_index = tuple.dport - 5020;
-	portflows.insert(&tuple.dport, &(skb->tc_classid))
+	portflows.insert(&tuple.dport, &(skb->tc_classid));
 	hits.increment(skb->tc_classid);
 	goto KEEP;
 
