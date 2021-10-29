@@ -68,6 +68,7 @@ class AggregationProcess(multiprocessing.Process):
         while priority in self.total_usage.keys() and remaining > 0:
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = min(int((remaining / float(self.total_usage[priority])) * 100), 100) if float(self.total_usage[priority]) > 0 else 100
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(float(self.total_usage[priority]) <= remaining)
+            print("Priority {}: usage {}. Remaining {}".format(priority, self.total_usage[priority], remaining))
             if float(self.total_usage[priority]) > remaining:
                 self.split_class = priority
                 self.split_fraction = remaining / float(self.total_usage[priority])
