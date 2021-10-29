@@ -27,7 +27,7 @@ BPF_HASH(eligible_flows_bytes, u32, u64);
 BPF_HASH(eligible_flows_timestamp, u32, u64);
 BPF_HASH(split_flows, u32, int);
 BPF_ARRAY(hits, u64, 32);
-BPF_ARRAY(portflows, u64, 10);
+BPF_ARRAY(portflows, __u32, 10);
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -127,7 +127,7 @@ int filter(struct __sk_buff *skb) {
 		}
 	}
 	int port_index = tuple.dport - 5020;
-	portflows.insert(&tuple.dport, &(skb->tc_classid));
+	portflows.update(&port_index, &(skb->tc_classid));
 	hits.increment(skb->tc_classid);
 	goto KEEP;
 
