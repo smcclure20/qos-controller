@@ -101,6 +101,7 @@ while True:
     ports = bpf_rl.get_table('portflows')
     port_maps = [(x[0].value, x[1].value) for x in ports.items()]
     print("Port <-> tc class: ", port_maps)
+    ports.clear()
 
     bandwidths = []
     counts = []

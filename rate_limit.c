@@ -69,7 +69,7 @@ int filter(struct __sk_buff *skb) {
 	    tuple.dport = tcp->dst_port;
 	}
 	u32 tuple_hash = (u32)jhash(&tuple, sizeof(tuple),(u32)0);
-
+    u32 tc_class = 0;
 	u64* prio = priorities.lookup(&tos_int);
 	if (prio != NULL){
 	    if (*prio == SPLIT_PRIO){
@@ -84,6 +84,7 @@ int filter(struct __sk_buff *skb) {
 		    if (permitted != NULL && *permitted == 1){
 		        // If the flow has already been permitted, classify accordingly
 		        skb->tc_classid = (__u32) 1;
+		        tc_class = (u32)*prio;
 		        //ip->tos = (u8) 4;
 		    }
 		    else if (permitted != NULL && permitted == 0 && *bw > 0){
@@ -100,10 +101,12 @@ int filter(struct __sk_buff *skb) {
 		            split_bw.update(&bw_lk, &updated_bw);
 
 		            skb->tc_classid = (__u32)1;
+		            tc_class = (u32)*prio;
 		            //ip->tos = (u8) 4;
 		        }
 		        else {
 		            skb->tc_classid = (__u32) 2;
+		            tc_class = (u32)*prio;
 		        }
 		    }
 		    else if(permitted == NULL){ // TODO: how to add bw >0 without breaking things
@@ -116,18 +119,21 @@ int filter(struct __sk_buff *skb) {
                 eligible_flows_timestamp.insert(&tuple_hash, &now_ts);
 
                 skb->tc_classid = (__u32) 2;
+                tc_class = (u32)*prio;
 		    }
 		    else{
 		        skb->tc_classid = (__u32) 2;
+		        tc_class = (u32)*prio;
 		    }
 		}
 		else{
 		    skb->tc_classid = (__u32) *prio;
+		    tc_class = (u32)*prio;
 		    //ip->tos = (u8) (*prio + 3); // priority 1 -> DSCP 4 (2 -> 5)
 		}
 	}
 	int port_index = tuple.dport - 5020;
-	u32 tc_class = (u32)skb->tc_classid;
+//	u32 tc_class = (u32)skb->tc_classid;
 	portflows.update(&port_index, &tc_class);
 	hits.increment(skb->tc_classid);
 	goto KEEP;
