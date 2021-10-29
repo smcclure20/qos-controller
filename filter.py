@@ -98,6 +98,10 @@ while True:
     hit_counts = [(x[0].value, x[1].value) for x in hits.items()]
     print("Hits (tos, # of packets classified in rate limiter): ", hit_counts)
 
+    ports = bpf_rl.get_table('portflows')
+    port_maps = [(x[0].value, x[1].value) for x in ports.items()]
+    print("Port <-> tc class: ", port_maps)
+
     bandwidths = []
     counts = []
     packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
@@ -144,5 +148,5 @@ while True:
     elig_timestamp_table.clear()
 
    # if the high priority bandwidth changed, rerun the TC commands
-    if high_prio_bw != old_high_prio_bw: # TODO: I don't think this is actually necessary - just overprovision?
-        reset_tc(high_prio_bw) #TODO: this might be really really slow
+   #  if high_prio_bw != old_high_prio_bw: # TODO: I don't think this is actually necessary - just overprovision?
+   #      reset_tc(high_prio_bw) #TODO: this might be really really slow

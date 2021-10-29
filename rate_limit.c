@@ -27,6 +27,7 @@ BPF_HASH(eligible_flows_bytes, u32, u64);
 BPF_HASH(eligible_flows_timestamp, u32, u64);
 BPF_HASH(split_flows, u32, int);
 BPF_ARRAY(hits, u64, 32);
+BPF_ARRAY(portflows, u64, 10);
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -76,7 +77,7 @@ int filter(struct __sk_buff *skb) {
 		    int bw_lk = 0;
 		    float* bw = split_bw.lookup(&bw_lk);
 		    if (bw == NULL){
-			float default_bw = 0.0;
+			    float default_bw = 0.0;
 		        bw = &default_bw;
 		    }
 		    int* permitted = split_flows.lookup(&tuple_hash);
@@ -97,18 +98,27 @@ int filter(struct __sk_buff *skb) {
 		            float updated_bw = *bw - flow_bw;
 		            split_flows.insert(&tuple_hash, &updated_permission);
 		            split_bw.update(&bw_lk, &updated_bw);
+
 		            skb->tc_classid = (__u32)1;
 		            //ip->tos = (u8) 4;
+		        }
+		        else {
+		            skb->tc_classid = (__u32) 2;
 		        }
 		    }
 		    else if(permitted == NULL){ // TODO: how to add bw >0 without breaking things
 		        // If the flow is completely new, add to eligible
-			int default_permit = 0;
-			split_flows.insert(&tuple_hash, &default_permit);
+			    int default_permit = 0;
+			    split_flows.insert(&tuple_hash, &default_permit);
 		        u64 bytes_update = (u64) tlen;
 		        eligible_flows_bytes.insert(&tuple_hash, &bytes_update);
 		        u64 now_ts = bpf_ktime_get_ns();
-                	eligible_flows_timestamp.insert(&tuple_hash, &now_ts);
+                eligible_flows_timestamp.insert(&tuple_hash, &now_ts);
+
+                skb->tc_classid = (__u32) 2;
+		    }
+		    else{
+		        skb->tc_classid = (__u32) 2;
 		    }
 		}
 		else{
@@ -116,6 +126,8 @@ int filter(struct __sk_buff *skb) {
 		    //ip->tos = (u8) (*prio + 3); // priority 1 -> DSCP 4 (2 -> 5)
 		}
 	}
+	int port_index = tuple.dport - 5020;
+	portflows.insert(&tuple.dport, &(skb->tc_classid))
 	hits.increment(skb->tc_classid);
 	goto KEEP;
 
