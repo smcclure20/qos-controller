@@ -72,6 +72,7 @@ class AggregationProcess(multiprocessing.Process):
             if float(self.total_usage[priority]) > remaining:
                 self.split_class = priority
                 self.split_fraction = remaining / float(self.total_usage[priority])
+                print("Set split class to {}".format(priority))
             remaining -= float(self.total_usage[priority])
             priority += 1
 
