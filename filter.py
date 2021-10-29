@@ -108,8 +108,8 @@ while True:
     packet_cnt = bpf_filter.get_table('counts')  # Take the counts and report
     with open(USAGE_FILE, "w") as file:
         for count in packet_cnt.items():
-            bandwidths.append(count[1].value/OUTPUT_INTERVAL)
-            counts.append((count[0].value, count[1].value/OUTPUT_INTERVAL))
+            bandwidths.append((count[1].value * 8)/OUTPUT_INTERVAL)
+            counts.append((count[0].value, (count[1].value * 8)/OUTPUT_INTERVAL))
         file.write(str(counts))
         # file.write(str(packet_cnt.values()))
     packet_cnt.clear()
