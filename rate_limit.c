@@ -22,12 +22,12 @@ struct five_tuple {
 };
 
 BPF_ARRAY(priorities, u64, 32);
-BPF_ARRAY(split_bw, float, 1);
-BPF_HASH(eligible_flows_bytes, u32, u64);
-BPF_HASH(eligible_flows_timestamp, u32, u64);
-BPF_HASH(split_flows, u32, int);
-BPF_ARRAY(hits, u64, 32);
-BPF_ARRAY(portflows, u32, 10);
+BPF_ARRAY(split_bw, float, 1); // bandwidth available in the split class
+BPF_HASH(eligible_flows_bytes, u32, u64); //track bytes sent for eligible flows
+BPF_HASH(eligible_flows_timestamp, u32, u64); // track timestamps of when eligible flows arrived
+BPF_HASH(split_flows, u32, int); // track which flows have been seen and which have not
+BPF_ARRAY(hits, u64, 32); // debugging
+BPF_ARRAY(portflows, u32, 10); // debugging
 
 /*eBPF program.
   Filter TCP/UDP/ICMP packets, having payload not empty
@@ -46,6 +46,7 @@ int filter(struct __sk_buff *skb) {
 	    	default: goto DROP;
 	}
 
+    // Parse the five tuple and hash for storing info about the flow
 	IP: ;
 	struct ip_t *ip = cursor_advance(cursor, sizeof(*ip));
 
@@ -69,33 +70,45 @@ int filter(struct __sk_buff *skb) {
 	    tuple.dport = tcp->dst_port;
 	}
 	u32 tuple_hash = (u32)jhash(&tuple, sizeof(tuple),(u32)0);
+
+	// Debugging stuff
     u32 tc_class = 0;
     skb->tc_classid = (__u32) 3;
 	tc_class = (u32)3;
 	u64* prio = priorities.lookup(&tos_int);
+
+	// Priorities are 1, 2, or 3. Should never be null
 	if (prio != NULL){
+
+	    // If in split class, check if it has already been seen
 	    if (*prio == SPLIT_PRIO){
-		    // if in the split table, let through
+		    // Find the split class bandwidth
 		    int bw_lk = 0;
 		    float* bw = split_bw.lookup(&bw_lk);
 		    if (bw == NULL){
 			    float default_bw = 0.0;
 		        bw = &default_bw;
 		    }
+
 		    int* permitted = split_flows.lookup(&tuple_hash);
+
+		    // If the flow has already been permitted, classify accordingly
 		    if (permitted != NULL && *permitted == 1){
-		        // If the flow has already been permitted, classify accordingly
 		        skb->tc_classid = (__u32) 1;
 		        tc_class = (u32)*prio;
 		        //ip->tos = (u8) 4;
 		    }
+		    // If the flow has been seen before but has not been promoted, it is still eligible
 		    else if (permitted != NULL && permitted == 0 && *bw > 0){  // TODO: THIS IS NOT WORKING!!!!!!
-		        // If the flow has been seen before but has not been promoted, it is still eligible
+		        // Calculate the bandwidth consumption of this flow over since seen TODO: Make this since the last timestamp?? <- this might get cleared by the python process
 		        eligible_flows_bytes.increment(tuple_hash, tlen);
 		        u64 *ts = eligible_flows_timestamp.lookup(&tuple_hash);
 		        u64 now = bpf_ktime_get_ns();
+		        //eligible_flows_timestamp.update(&tuple_hash, &now)
 		        u64 *bytes = eligible_flows_bytes.lookup(&tuple_hash);
 		        float flow_bw = (float) *bytes / (float)((*ts - now) / 1000000000);
+
+		        // If there is bandwidth left for the traffic class, mark the flow as permitted // TODO: what if a flow ends??
 		        if (*bw - flow_bw > 0){
 		            int updated_permission = 1;
 		            float updated_bw = *bw - flow_bw;
@@ -106,13 +119,14 @@ int filter(struct __sk_buff *skb) {
 		            tc_class = (u32)*prio;
 		            //ip->tos = (u8) 4;
 		        }
+		        // If no available BW, put in lower class
 		        else {
 		            skb->tc_classid = (__u32) 2;
 		            tc_class = (u32)*prio;
 		        }
 		    }
+		    // If the flow is completely new, add to eligible
 		    else if(permitted == NULL){ // TODO: how to add bw >0 without breaking things
-		        // If the flow is completely new, add to eligible
 			    int default_permit = 0;
 			    split_flows.insert(&tuple_hash, &default_permit);
 		        u64 bytes_update = (u64) tlen;
@@ -123,17 +137,21 @@ int filter(struct __sk_buff *skb) {
                 skb->tc_classid = (__u32) 2;
                 tc_class = (u32)*prio;
 		    }
+		    // Otherwise (flow seen, but no bandwidth), put in lower class
 		    else{
 		        skb->tc_classid = (__u32) 2;
 		        tc_class = (u32)*prio;
 		    }
 		}
+		// If not in split priority, put in the class according to its priority in the table
 		else{
 		    skb->tc_classid = (__u32) *prio;
 		    tc_class = (u32)*prio;
 		    //ip->tos = (u8) (*prio + 3); // priority 1 -> DSCP 4 (2 -> 5)
 		}
 	}
+
+	// Logging for debugging
 	int port_index = tuple.dport - 5020;
 //	u32 tc_class = (u32)skb->tc_classid;
 	portflows.update(&port_index, &tc_class);
