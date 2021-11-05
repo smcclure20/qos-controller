@@ -12,7 +12,7 @@ from host import USAGE_FILE, PRIORITIES_FILE, SPLIT_CLASS_BW_CAP_FILE
 
 OUTPUT_INTERVAL = 10
 INTERFACE = "eth0" #"lo"
-TOTAL_RATE = 256
+TOTAL_RATE = 512
 STARTING_HI_PRI = 128
 RATE_FORMAT = "{}kbit"
 SPLIT_CLASS_PRIO = 3
@@ -21,7 +21,7 @@ SPLIT_CLASS_PRIO = 3
 def reset_tc(hi_pr_bw):
     try:
         # Set up egress classifier
-        ipr.tc("del", "htb", iface, 0x10000)
+        ipr.tc("del", "htb", iface, "1:0")
 
     except Exception as e:
         print("Failed to remove htb from interface.")
@@ -29,7 +29,7 @@ def reset_tc(hi_pr_bw):
 
     try:
         # Set up egress classifier
-        ipr.tc("add", "htb", iface, 0x10000)
+        ipr.tc("add", "htb", iface, "1:0", default="20:0")
 
     except Exception as e:
         print("Failed at adding HTB to interface.")
@@ -37,32 +37,32 @@ def reset_tc(hi_pr_bw):
 
     try:
         # Root class
-        ipr.tc("add-class", "htb", iface, 0x10001,
-            parent=0x10000,
+        ipr.tc("add-class", "htb", iface, "1:01",
+            parent="1:0",
             rate=RATE_FORMAT.format(TOTAL_RATE),
             burst=1024 * 6)
 
         # Sub classes
-        ipr.tc("add-class", "htb", iface, 0x10010,
-            parent=0x10001,
+        ipr.tc("add-class", "htb", iface, "1:10",
+            parent="1:01",
             rate=RATE_FORMAT.format(hi_pr_bw),
             burst=1024 * 6,
             prio=1)
-        ipr.tc("add-class", "htb", iface, 0x10020,
-            parent=0x10001,
+        ipr.tc("add-class", "htb", iface, "1:20",
+            parent="0:01",
             rate=RATE_FORMAT.format(TOTAL_RATE-hi_pr_bw),
             burst=1024 * 6,
             prio=2)
 
         # Leaf queues
-        ipr.tc("add", "pfifo_fast", iface, 0x100000,
-            parent=0x10010)
-        ipr.tc("add", "pfifo_fast", iface, 0x200000,
-            parent=0x10020)
+        ipr.tc("add", "pfifo_fast", iface, "10:0",
+            parent="1:10")
+        ipr.tc("add", "pfifo_fast", iface, "20:0",
+            parent="1:20")
 
         # Add filter
         ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_filter_fn.fd,
-            name=bpf_filter_fn.name, parent=0x10000, action="ok")
+            name=bpf_filter_fn.name, parent="1:0", prio=1, direct_action=True)
 
     except Exception as e:
         print("Failed at creating the subclasses.")
@@ -71,8 +71,8 @@ def reset_tc(hi_pr_bw):
     try:
         # Set up ingress classifier
         # ipr.tc("add", "egress", iface, "ffff:")
-        ipr.tc("add-filter", "bpf", iface, ":1", fd=bpf_rl_fn.fd,
-                     name=bpf_rl_fn.name, parent=0x10000, action="ok")
+        ipr.tc("add-filter", "bpf", iface, ":2", fd=bpf_rl_fn.fd,
+                     name=bpf_rl_fn.name, parent="1:0", direct_action=True, prio=2)
     except Exception as e:
         print("Failed at creating the tracing classifer.")
         print(e)
@@ -99,9 +99,14 @@ while True:
     print("Hits (tos, # of packets classified in rate limiter): ", hit_counts)
 
     ports = bpf_rl.get_table('portflows')
-    port_maps = [(x[0].value, x[1].value) for x in ports.items()]
+    port_maps = [(x[0].value, hex(x[1].value)) for x in ports.items()]
     print("Port <-> tc class: ", port_maps)
     ports.clear()
+
+    splits = bpf_rl.get_table("portflows_split_flows")
+    split_maps = [(x[0].value, x[1].value) for x in splits.items()]
+    print("Port <-> eligibility: ", split_maps)
+    splits.clear()
 
     bandwidths = []
     counts = []

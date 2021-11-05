@@ -43,9 +43,9 @@ int filter(struct __sk_buff *skb) {
 //		}
 
     KEEP:
-        return TC_ACT_OK;
+        return TC_ACT_PIPE;
     DROP:
-        return TC_ACT_OK;
+        return TC_ACT_PIPE;
 //    END:
 //        return TC_ACT_OK;
 }
