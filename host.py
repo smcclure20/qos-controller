@@ -3,11 +3,11 @@ import time
 from flask import Flask, request, Response, make_response
 import multiprocessing
 from tenant import PRIORITY_FORMAT
+import sys
 
 app = Flask(__name__)
 
 REPORTING_INTERVAL = 10
-ADDRESS = "127.0.0.1"
 PORT = 5001
 ADDRESS_FORMAT = "{}:{}"
 USAGE_FILE = "./usage"
@@ -55,10 +55,12 @@ def set_priorities():
 
 
 class ReportProcess(multiprocessing.Process):
-    def __init__(self, usage_queue):
+    def __init__(self, usage_queue, aggregator, local_address):
         multiprocessing.Process.__init__(self)
         self.current_usage = {}
         self.usage_queue = usage_queue
+        self.aggregator = aggregator
+        self.local_addr = local_address
 
     def run(self):
         print("Starting reporting process")
@@ -78,13 +80,13 @@ class ReportProcess(multiprocessing.Process):
             usage[PRIORITY_FORMAT.format(stat[0])] = stat[1]
         # usage = {"name": "host1", "address": ADDRESS_FORMAT.format(ADDRESS_FORMA, PORT), "prio_0": 2.5, "prio_1": 15} # Index is priority level, data is gbps
         usage["name"] = "host1"
-        usage["address"] = ADDRESS_FORMAT.format(ADDRESS, PORT)
+        usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
         self.current_usage = usage
 
     def send_usage(self):
         self.usage_queue.put(self.current_usage)
         try:
-            r = requests.post('http://127.0.0.1:5000/usage', data=self.current_usage)
+            r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
             print("Sending usage:")
             print(r.text)
         except Exception as e:
@@ -93,7 +95,12 @@ class ReportProcess(multiprocessing.Process):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: ./host.py <aggregator address> <local address>")
+        exit(1)
+    aggregator_addr = sys.argv[1]
+    local_addr = sys.argv[2]
     usage_queue = multiprocessing.Queue()
-    report_task = ReportProcess(usage_queue)
+    report_task = ReportProcess(usage_queue, aggregator_addr, local_addr)
     report_task.start()
-    app.run(port=PORT, host=ADDRESS)
+    app.run(port=PORT, host=local_addr)
