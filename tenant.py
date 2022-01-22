@@ -109,7 +109,10 @@ class AggregationProcess(multiprocessing.Process):
 
 
 if __name__ == '__main__':
-    host_addr = sys.argv[0]
+    if len(sys.argv) != 2:
+        print("Usage: ./tenant.py <host ip>")
+        exit(1)
+    host_addr = sys.argv[1]
     host_usage = {}
     usage_queue = multiprocessing.Queue()
     aggregation_task = AggregationProcess(usage_queue)
