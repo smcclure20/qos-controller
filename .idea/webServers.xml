@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="0ba01461-1d15-4d3a-832f-0c8edecf1a4d" name="bpf-tester" url="http://52.183.119.45">
+        <fileTransfer accessType="SFTP" host="52.183.119.45" port="22" sshConfigId="87e26333-af97-40c6-acea-c2f0f624ae71" sshConfig="azureuser@52.183.119.45:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

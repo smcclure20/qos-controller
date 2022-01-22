@@ -2,9 +2,10 @@ from flask import Flask, request, Response, make_response
 import time
 import multiprocessing
 import requests
+import sys
 app = Flask(__name__)
 
-PRIO_BANDWIDTH = 128000
+PRIO_BANDWIDTH = 1280000
 PRIORITY_FORMAT = "prio_{}"
 PRIORITY_NAME_FORMAT = "{}_prio_{}"
 AGGREGATION_INTERVAL = 10
@@ -108,10 +109,11 @@ class AggregationProcess(multiprocessing.Process):
 
 
 if __name__ == '__main__':
+    host_addr = sys.argv[0]
     host_usage = {}
     usage_queue = multiprocessing.Queue()
     aggregation_task = AggregationProcess(usage_queue)
     aggregation_task.start()
-    app.run(port=5000)
+    app.run(port=5000, host=host_addr)
 
 

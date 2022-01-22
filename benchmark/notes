@@ -1,0 +1,12 @@
+Benchmarking plan:
+- How fast the controller/aggregator can handle (many) updates
+    - Set up a bunch of host clients on another VM and send a bunch of frequent updates
+    - Check when it maxes a resource
+- Throughput of the changes on the host (?)
+- Latency of the changes on the host (?)
+- Stress out the hash table
+    - Have a bunch of tiny flows ...?
+- Accuracy as a function of the reporting/aggregation intervals
+    - Can do this with one client node
+    - Send traffic/to from client and try out different intervals
+    - See how much straying one can get (how would this even be possible?)
