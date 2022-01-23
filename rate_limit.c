@@ -79,6 +79,7 @@ int filter(struct __sk_buff *skb) {
     skb->tc_classid = (__u32) 4;
 	tc_class = (u32)4;
 	u64* prio = priorities.lookup(&tos_int);
+	int classification = 1;
 
 	// Priorities are 1, 2, or 3. Should never be null
 	if (prio != NULL){
@@ -90,9 +91,7 @@ int filter(struct __sk_buff *skb) {
             if (permitted != NULL){
                 // If the flow has already been permitted, classify accordingly
                 if (*permitted == 1){
-                    int test = 6;
-                    int port_index = tuple.dport - 5020;
-                    portflows_split_flows.update(&port_index, &test);
+                    classification = 2;
                     tc_class = (u32) HI_PRI;
                     skb->tc_classid = (__u32) tc_class;
                     //ip->tos = (u8) 4;
@@ -122,8 +121,7 @@ int filter(struct __sk_buff *skb) {
                             if (bw != NULL){
                                 if ((*bw > flow_bw) && time_diff > 1000000000){
                                     u8 updated_permission = 1;
-                                    int port_index = tuple.dport - 5020;
-                                    portflows_split_flows.update(&port_index, &updated_permission);
+                                    classification = 3;
                                     u32 updated_bw = *bw - flow_bw;
                                     split_bw.update(&bw_lk, &updated_bw);
                                     split_flows.update(&tuple_hash, &updated_permission);
@@ -137,9 +135,7 @@ int filter(struct __sk_buff *skb) {
                                     u32 bytes_update = (u32) tlen;
                                     eligible_flows_bytes.update(&tuple_hash, &bytes_update);
 
-                                    int test = 7;
-                                    int port_index = tuple.dport - 5020;
-                                    portflows_split_flows.update(&port_index, &test);
+                                    classification = 4;
 
                                     tc_class = (u32) LOW_PRI;
                                     skb->tc_classid = (__u32) tc_class;
@@ -150,6 +146,7 @@ int filter(struct __sk_buff *skb) {
                                     skb->tc_classid = (__u32) tc_class;
                                     u32 bytes_update = (u32) tlen;
                                     eligible_flows_bytes.increment(tuple_hash, bytes_update);
+                                    classification = 5;
                                 }
                             }
 
@@ -163,9 +160,7 @@ int filter(struct __sk_buff *skb) {
 		    else{ // TODO: how to add bw >0 without breaking things
 			    u8 default_permit = 0;
 			    split_flows.insert(&tuple_hash, &default_permit);
-			    int port_index = tuple.dport - 5020;
-			    int test = 5;
-	            portflows_split_flows.update(&port_index, &test);
+			    classification = 6;
 		        u32 bytes_update = (u32) tlen;
 		        eligible_flows_bytes.insert(&tuple_hash, &bytes_update);
 		        u64 now_ts = bpf_ktime_get_ns();
@@ -186,6 +181,7 @@ int filter(struct __sk_buff *skb) {
 	// Logging for debugging
 	int port_index = tuple.dport - 5020;
 	portflows.update(&port_index, &tc_class);
+	portflows_split_flows.update(&port_index, &classification);
 	hits.increment(skb->tc_classid);
 	goto KEEP;
 
