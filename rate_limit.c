@@ -132,6 +132,9 @@ int filter(struct __sk_buff *skb) {
                                     skb->tc_classid = (__u32) HI_PRI;
                                 }
                                 else if (time_diff > 1000000000){
+                                    int test = 7;
+                                    int port_index = tuple.dport - 5020;
+                                    portflows_split_flows.update(&port_index, &test);
                                     u64 now_ts = bpf_ktime_get_ns();
                                     eligible_flows_timestamp.update(&tuple_hash, &now_ts);
                                     u32 bytes_update = (u32) tlen;
@@ -151,51 +154,7 @@ int filter(struct __sk_buff *skb) {
 
                         }
                     }
-//                    bool time_passed = time_diff > 1000000000;
-//                    u64 time_diff = *ts; // limited to four-ish seconds due to lower bits
-//                    eligible_flows_timestamp.update(&tuple_hash, &now);
-//                    u32 *bytes = eligible_flows_bytes.lookup(&tuple_hash);
-//                    u32 bytes = 0;
-//                    u32 flow_bw = 0;
-//                    if (bytes != NULL){
-//                        flow_bw = (u32) bytes / (time_diff / 1000000000);
-//                    }
-//                    int flow_bw =0;
-//                    time_diff = 0;
 
-                    // If there is bandwidth left for the traffic class, mark the flow as permitted // TODO: what if a flow ends??
-                    // Do not want to do this per-packet, do this at most once per second
-                    // If the bw is 0, signifies that we should let it all through
-//                    if ((*bw > flow_bw) && time_diff > 1000000000){
-//                          u32 updated_bw = *bw - flow_bw;
-//                        int port_index = tuple.dport - 5020;
-//                        portflows_split_flows.update(&port_index, &updated_permission);
-//                        split_bw.update(&bw_lk, &updated_bw);
-
-//                        u8 updated_permission = 0;
-//                        split_flows.update(&tuple_hash, &updated_permission);
-
-//                        tc_class = (u32) LOW_PRI;
-//                        skb->tc_classid = (__u32) LOW_PRI;
-//                        //ip->tos = (u8) 4;
-//                    }
-//                     If it has been a second, but no room for the flow, just reset the timer
-//                    else if (time_diff > 1000000000){
-//                        u64 now_ts = bpf_ktime_get_ns();
-//                        eligible_flows_timestamp.update(&tuple_hash, &now_ts);
-//                        u32 bytes_update = (u32) tlen;
-//                        eligible_flows_bytes.update(&tuple_hash, &bytes_update);
-//
-//                        tc_class = (u32) LOW_PRI;
-//                        skb->tc_classid = (__u32) tc_class;
-//                    }
-//                     If not currently eligible for promotion, keep in lower class
-//                    else {
-//                        tc_class = (u32) LOW_PRI;
-//                        skb->tc_classid = (__u32) tc_class;
-//                        u32 bytes_update = (u32) tlen;
-//                        eligible_flows_bytes.update(&tuple_hash, &bytes_update);
-//                    }
                 }
             }
 
