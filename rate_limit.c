@@ -132,13 +132,14 @@ int filter(struct __sk_buff *skb) {
                                     skb->tc_classid = (__u32) HI_PRI;
                                 }
                                 else if (time_diff > 1000000000){
-                                    int test = 7;
-                                    int port_index = tuple.dport - 5020;
-                                    portflows_split_flows.update(&port_index, &test);
                                     u64 now_ts = bpf_ktime_get_ns();
                                     eligible_flows_timestamp.update(&tuple_hash, &now_ts);
                                     u32 bytes_update = (u32) tlen;
                                     eligible_flows_bytes.update(&tuple_hash, &bytes_update);
+
+                                    int test = 7;
+                                    int port_index = tuple.dport - 5020;
+                                    portflows_split_flows.update(&port_index, &test);
 
                                     tc_class = (u32) LOW_PRI;
                                     skb->tc_classid = (__u32) tc_class;
