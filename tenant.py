@@ -55,9 +55,9 @@ class AggregationProcess(multiprocessing.Process):
             for key in update.keys():
                 priority = int(key)
                 if priority in self.total_usage.keys():
-                    self.total_usage[priority] += update[key]
+                    self.total_usage[priority] += float(update[key])
                 else:
-                    self.total_usage[priority] = update[key]
+                    self.total_usage[priority] = float(update[key])
 
     def clear_totals(self):
         self.total_usage.clear()
