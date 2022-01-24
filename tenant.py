@@ -5,8 +5,8 @@ import requests
 import sys
 app = Flask(__name__)
 
-PRIO_BANDWIDTH = 1280000
-PRIORITY_FORMAT = "prio_{}"
+PRIO_BANDWIDTH = 5000000000
+PRIORITY_FORMAT = "{}"
 PRIORITY_NAME_FORMAT = "{}_prio_{}"
 AGGREGATION_INTERVAL = 10
 PRIORITIES_URL = 'http://{}/priorities'
@@ -51,7 +51,7 @@ class AggregationProcess(multiprocessing.Process):
             update = self.usage_queue.get()
             self.current_hosts.append(update.pop("address"))
             for key in update.keys():
-                priority = int(key.split("_")[-1])
+                priority = int(key)
                 if priority in self.total_usage.keys():
                     self.total_usage[priority] += update[key]
                 else:
