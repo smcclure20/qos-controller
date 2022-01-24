@@ -18,7 +18,7 @@ SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
 
 DEBUG=False
 STRESS_TEST=True
-HOSTS=10
+HOSTS=5000
 
 def printd(to_print, to_print2=None):
     if DEBUG:
@@ -34,13 +34,14 @@ def set_priorities():
         priorities[int(update["split_class"])] = 3
         priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
 
-        bws = 0
+        bws = {}
         while not usage_queue.empty():
             bws = usage_queue.get()
 
         with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-            file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
-            printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
+            if len(bws.keys()) > 0:
+                file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
+                printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
     printd("Current priorities:", priorities)
 
     with open(PRIORITIES_FILE, "w") as file:

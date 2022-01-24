@@ -1,22 +1,31 @@
 import os
 
-DIR = "../../perf_tests/"
-OUTPUT = "./throughputs.csv"
+DIR = "../perf_tests/tput_10s/"
+OUTPUT = "./benchmark/throughputs_10s.csv"
+
+def remove_empties(line):
+    while len(line) > 10:
+        line.remove("")
+    return line
+
 
 output_file = open(OUTPUT, "w")
 
-files = os.listdir()
-
+files = os.listdir(DIR)
+files.sort()
+print(files)
 for file in files:
-    if file.contains("tput"):
-        fh = open(file, "r")
+    if "tput" in file and not "10" in file:
+        fh = open(DIR + file, "r")
         lines = fh.readlines()
         sender = lines[-4].split(" ")
-        rate = sender[6]
+        sender = remove_empties(sender)
+        print(sender)
+        rate = sender[4]
         fh.close()
-        if file.contains("default"):
-            output_file.write("default,{}".format(rate))
-        elif file.contains("bpf"):
-            output_file.write("bpf,{}".format(rate))
+        if "default" in file:
+            output_file.write("default,{}\n".format(rate))
+        elif "bpf" in file:
+            output_file.write("bpf,{}\n".format(rate))
 
 output_file.close()
