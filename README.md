@@ -12,3 +12,5 @@
 -S as the dscp field, so the last two bits (ECN) are ignored.
 
 https://linuxconfig.org/configuring-virtual-network-interfaces-in-linux
+
+`sudo tc qdisc del root dev eth0` to delete leftover tc configuration

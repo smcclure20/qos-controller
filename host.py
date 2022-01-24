@@ -18,9 +18,9 @@ SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
 
 DEBUG=False
 
-def printd(to_print):
+def printd(to_print, to_print2=None):
     if DEBUG:
-        print(to_print)
+        print(to_print, to_print2)
 
 
 @app.post('/priorities/')
@@ -38,7 +38,7 @@ def set_priorities():
 
         with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
             file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
-            print("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
+            printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
     printd("Current priorities:", priorities)
 
     with open(PRIORITIES_FILE, "w") as file:
