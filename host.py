@@ -16,9 +16,16 @@ SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
 
 # TODO: create consistent parsing functions for format of the reports
 
+DEBUG=False
+
+def printd(to_print):
+    if DEBUG:
+        print(to_print)
+
+
 @app.post('/priorities/')
 def set_priorities():
-    print("Received priority update")
+    printd("Received priority update")
     update = request.form.to_dict()
     priorities = dict.fromkeys(range(0, 32), 1)
     if "split_class" in update:
@@ -32,7 +39,7 @@ def set_priorities():
         with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
             file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
             print("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
-    print("Current priorities:", priorities)
+    printd("Current priorities:", priorities)
 
     with open(PRIORITIES_FILE, "w") as file:
         file.write(str(priorities))
@@ -64,7 +71,7 @@ class ReportProcess(multiprocessing.Process):
         self.local_addr = local_address
 
     def run(self):
-        print("Starting reporting process")
+        printd("Starting reporting process")
         while True:
             time.sleep(REPORTING_INTERVAL)
             self.collect_usage()
@@ -75,7 +82,7 @@ class ReportProcess(multiprocessing.Process):
         with open(USAGE_FILE, "r") as file:
             usage_stats = eval(file.read())
 
-        print(usage_stats)
+        printd(usage_stats)
         usage = {}
         for stat in usage_stats:
             usage[PRIORITY_FORMAT.format(stat[0])] = stat[1]
@@ -88,11 +95,11 @@ class ReportProcess(multiprocessing.Process):
         self.usage_queue.put(self.current_usage)
         try:
             r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
-            print("Sending usage:")
-            print(r.text)
+            printd("Sending usage:")
+            printd(r.text)
         except Exception as e:
-            print("Failed connection.")
-            print(e)
+            printd("Failed connection.")
+            printd(e)
 
 
 if __name__ == "__main__":

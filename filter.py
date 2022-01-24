@@ -12,10 +12,11 @@ from host import USAGE_FILE, PRIORITIES_FILE, SPLIT_CLASS_BW_CAP_FILE
 
 OUTPUT_INTERVAL = 10
 INTERFACE = "eth0" #"lo"
-TOTAL_RATE = 512
-STARTING_HI_PRI = 128
+TOTAL_RATE = 10000000
+STARTING_HI_PRI = 5000000
 RATE_FORMAT = "{}kbit"
 SPLIT_CLASS_PRIO = 3
+DEBUG=True
 
 
 def reset_tc(hi_pr_bw):
@@ -92,21 +93,23 @@ reset_tc(STARTING_HI_PRI)
 
 while True:
     time.sleep(OUTPUT_INTERVAL)
-    print("Updating local data")
 
-    hits = bpf_rl.get_table('hits')
-    hit_counts = [(x[0].value, x[1].value) for x in hits.items()]
-    print("Hits (tos, # of packets classified in rate limiter): ", hit_counts)
+    if DEBUG:
+        print("Updating local data")
 
-    ports = bpf_rl.get_table('portflows')
-    port_maps = [(x[0].value, hex(x[1].value)) for x in ports.items()]
-    print("Port <-> tc class: ", port_maps)
-    ports.clear()
+        hits = bpf_rl.get_table('hits')
+        hit_counts = [(x[0].value, x[1].value) for x in hits.items()]
+        print("Hits (tos, # of packets classified in rate limiter): ", hit_counts)
 
-    splits = bpf_rl.get_table("portflows_split_flows")
-    split_maps = [(x[0].value, x[1].value) for x in splits.items()]
-    print("Port <-> eligibility: ", split_maps)
-    splits.clear()
+        ports = bpf_rl.get_table('portflows')
+        port_maps = [(x[0].value, hex(x[1].value)) for x in ports.items()]
+        print("Port <-> tc class: ", port_maps)
+        ports.clear()
+
+        splits = bpf_rl.get_table("portflows_split_flows")
+        split_maps = [(x[0].value, x[1].value) for x in splits.items()]
+        print("Port <-> eligibility: ", split_maps)
+        splits.clear()
 
     bandwidths = []
     counts = []

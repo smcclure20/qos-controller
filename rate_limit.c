@@ -9,6 +9,8 @@
 #define SPLIT_PRIO 3
 #define LOW_PRI 0x10020
 #define HI_PRI 0x10010
+#define ONE_SECOND 1000000000
+#define MIN_TIME 1000000000
 /*
   In 802.3, both the source and destination addresses are 48 bits (4 bytes) MAC address.
   6 bytes (src) + 6 bytes (dst) + 2 bytes (type) = 14 bytes
@@ -114,12 +116,12 @@ int filter(struct __sk_buff *skb) {
                         u32 *bytes = eligible_flows_bytes.lookup(&tuple_hash);
                         u32 flow_bw = 0;
                         if (bytes != NULL){
-                            flow_bw = (u32) *bytes / (time_diff / 1000000000);
+                            flow_bw = (u32) *bytes / (time_diff / ONE_SECOND);
                             // Find the split class bandwidth
                             int bw_lk = 0;
                             u32* bw = split_bw.lookup(&bw_lk);
                             if (bw != NULL){
-                                if ((*bw > flow_bw) && time_diff > 1000000000){
+                                if ((*bw > flow_bw) && time_diff > MIN_TIME){
                                     u8 updated_permission = 1;
                                     classification = 3;
                                     u32 updated_bw = *bw - flow_bw;
@@ -129,7 +131,7 @@ int filter(struct __sk_buff *skb) {
                                     tc_class = (u32) HI_PRI;
                                     skb->tc_classid = (__u32) HI_PRI;
                                 }
-                                else if (time_diff > 1000000000){
+                                else if (time_diff > MIN_TIME){
                                     u64 now_ts = bpf_ktime_get_ns();
                                     eligible_flows_timestamp.update(&tuple_hash, &now_ts);
                                     u32 bytes_update = (u32) tlen;

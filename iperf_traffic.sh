@@ -1,10 +1,14 @@
 #!/bin/bash
 
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5021 -D
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5022 -D
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5023 -D
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5024 -D
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 iperf3 -s -p 5025 -D
+KEYPATH="../receiver_key.pem"
+REMOTE_USER="azureuser"
+REMOTE_IP="20.112.15.215"
+
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP iperf3 -s -p 5021 -D
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP iperf3 -s -p 5022 -D
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP iperf3 -s -p 5023 -D
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP iperf3 -s -p 5024 -D
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP iperf3 -s -p 5025 -D
 
 rm results/prio1.out
 rm results/prio2.out
@@ -43,4 +47,4 @@ iperf3 -c 10.4.0.5  -t 100 -S 0x10 -b 50K --logfile results/prio4.out -p 5025
 echo "Test Complete"
 
 echo "Killing remote server processes"
-ssh -i ../receiver_key.pem azureuser@20.112.15.215 pkill iperf
+ssh -i $KEYPATH $REMOTE_USER@$REMOTE_IP pkill iperf

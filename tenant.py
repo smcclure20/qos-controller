@@ -7,16 +7,18 @@ app = Flask(__name__)
 
 PRIO_BANDWIDTH = 5000000000
 PRIORITY_FORMAT = "{}"
-PRIORITY_NAME_FORMAT = "{}_prio_{}"
 AGGREGATION_INTERVAL = 10
 PRIORITIES_URL = 'http://{}/priorities'
+DEBUG=False
 
-
+def printd(to_print):
+    if DEBUG:
+        print(to_print)
 
 @app.post('/usage/')
 def record_usage():
     host_name = request.form.get("name")
-    print("Received usage update from {}".format(host_name))
+    printd("Received usage update from {}".format(host_name))
     host_usage = request.form.to_dict()
     host_usage.pop("name")
     usage_queue.put(host_usage)
@@ -34,7 +36,7 @@ class AggregationProcess(multiprocessing.Process):
         self.split_fraction = None
 
     def run(self):
-        print("Starting aggregation process")
+        printd("Starting aggregation process")
         while True:
             time.sleep(AGGREGATION_INTERVAL)
             print("Calculating priorities...")
@@ -46,7 +48,7 @@ class AggregationProcess(multiprocessing.Process):
             print("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
     def aggregate_tenant(self):
-        print("Checking queue")
+        printd("Checking queue")
         while not self.usage_queue.empty():
             update = self.usage_queue.get()
             self.current_hosts.append(update.pop("address"))
@@ -69,11 +71,11 @@ class AggregationProcess(multiprocessing.Process):
         while priority in self.total_usage.keys() and remaining > 0:
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = min(int((remaining / float(self.total_usage[priority])) * 100), 100) if float(self.total_usage[priority]) > 0 else 100
             # self.final_priorities[PRIORITY_FORMAT.format(priority)] = int(float(self.total_usage[priority]) <= remaining)
-            print("Priority {}: usage {}. Remaining {}".format(priority, self.total_usage[priority], remaining))
+            printd("Priority {}: usage {}. Remaining {}".format(priority, self.total_usage[priority], remaining))
             if float(self.total_usage[priority]) > remaining:
                 self.split_class = priority
                 self.split_fraction = remaining / float(self.total_usage[priority])
-                print("Set split class to {}".format(priority))
+                printd("Set split class to {}".format(priority))
             remaining -= float(self.total_usage[priority])
             priority += 1
 
@@ -91,11 +93,11 @@ class AggregationProcess(multiprocessing.Process):
         for address in self.current_hosts:
             try:
                 r = requests.post(PRIORITIES_URL.format(address), data={"split_class": self.split_class, "split_fraction": self.split_fraction})
-                print("Sending priorities to {}:".format(address))
-                print(r.text)
+                printd("Sending priorities to {}:".format(address))
+                printd(r.text)
             except Exception as e:
-                print(e)
-                print("Skipping this report.")
+                printd(e)
+                printd("Skipping this report.")
 
     # def report_priorities(self):  # Report to hosts new ratios
     #     for address in self.current_hosts:
