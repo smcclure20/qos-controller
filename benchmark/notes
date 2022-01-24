@@ -1,5 +1,5 @@
 Benchmarking plan:
-- How fast the controller/aggregator can handle (many) updates
+- How fast the controller/aggregator can handle (many) updates [X]
     - Set up a bunch of host clients on another VM and send a bunch of frequent updates
     - Check when it maxes a resource
 - Throughput of the changes on the host (?)
@@ -10,3 +10,19 @@ Benchmarking plan:
     - Can do this with one client node
     - Send traffic/to from client and try out different intervals
     - See how much straying one can get (how would this even be possible?)
+    - The straying is technically unbounded in bandwidth, just limited in time
+- Resources consumed per update (bytes of network, cycles, etc) []
+    - Check cycles to calculate the response from aggregator [X]
+    - Check memory usage [X]
+    - Measure bandwidth consumed per tenant-vm pair [X]
+    - THese should just be numbers
+
+
+- What happens on a hash collision? [X]
+    - Flows get counted as one - either get permitted or dismissed together (I think this is fine)
+    - Talk about table size?
+
+- Does the BPF program limit the host at all? [~] (should do more trials here)
+    - Add latency to each packet, limit throughput, etc
+    - Try with and without it running and see what tcpdump can achieve, will need tcpping for latency [DO THIS]
+    - Or just ping?
