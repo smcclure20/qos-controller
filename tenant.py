@@ -39,13 +39,13 @@ class AggregationProcess(multiprocessing.Process):
         printd("Starting aggregation process")
         while True:
             time.sleep(AGGREGATION_INTERVAL)
-            print("Calculating priorities...")
+            printd("Calculating priorities...")
             self.clear_totals()
             self.aggregate_tenant()
             self.calculate_priority()
             self.report_priorities()
-            print("Updated priority traffic ratios:")
-            print("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
+            printd("Updated priority traffic ratios:")
+            printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
     def aggregate_tenant(self):
         printd("Checking queue")
