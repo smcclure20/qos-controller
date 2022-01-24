@@ -39,13 +39,13 @@ class AggregationProcess(multiprocessing.Process):
         printd("Starting aggregation process")
         while True:
             time.sleep(AGGREGATION_INTERVAL)
-            print("Calculating priorities...")
+            printd("Calculating priorities...")
             self.clear_totals()
             self.aggregate_tenant()
             self.calculate_priority()
             self.report_priorities()
-            print("Updated priority traffic ratios:")
-            print("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
+            printd("Updated priority traffic ratios:")
+            printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
     def aggregate_tenant(self):
         printd("Checking queue")
@@ -55,9 +55,9 @@ class AggregationProcess(multiprocessing.Process):
             for key in update.keys():
                 priority = int(key)
                 if priority in self.total_usage.keys():
-                    self.total_usage[priority] += update[key]
+                    self.total_usage[priority] += float(update[key])
                 else:
-                    self.total_usage[priority] = update[key]
+                    self.total_usage[priority] = float(update[key])
 
     def clear_totals(self):
         self.total_usage.clear()
