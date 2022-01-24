@@ -17,6 +17,8 @@ SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
 # TODO: create consistent parsing functions for format of the reports
 
 DEBUG=False
+STRESS_TEST=True
+HOSTS=10
 
 def printd(to_print, to_print2=None):
     if DEBUG:
@@ -100,6 +102,18 @@ class ReportProcess(multiprocessing.Process):
         except Exception as e:
             printd("Failed connection.")
             printd(e)
+
+        if STRESS_TEST:
+            for i in range(HOSTS):
+                self.current_usage["name"] = "host" + str(i+1)
+                self.current_usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
+                try:
+                    r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
+                    printd("Sending usage:")
+                    printd(r.text)
+                except Exception as e:
+                    printd("Failed connection.")
+                    printd(e)
 
 
 if __name__ == "__main__":
