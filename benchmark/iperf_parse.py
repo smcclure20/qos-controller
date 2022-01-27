@@ -1,7 +1,7 @@
 import os
 
-DIR = "../perf_tests/tput_10s/"
-OUTPUT = "./benchmark/throughputs_10s.csv"
+DIR = "../perf_tests/tput_15t/"
+OUTPUT = "./benchmark/throughputs_10s_15t.csv"
 
 def remove_empties(line):
     while len(line) > 10:
@@ -15,13 +15,17 @@ files = os.listdir(DIR)
 files.sort()
 print(files)
 for file in files:
-    if "tput" in file and not "10" in file:
+    if "tput" in file:
+        print(file)
         fh = open(DIR + file, "r")
         lines = fh.readlines()
+        print(len(lines))
+        if (len(lines) < 4):
+            continue
         sender = lines[-4].split(" ")
         sender = remove_empties(sender)
         print(sender)
-        rate = sender[4]
+        rate = sender[6]
         fh.close()
         if "default" in file:
             output_file.write("default,{}\n".format(rate))

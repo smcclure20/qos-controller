@@ -17,8 +17,8 @@ SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
 # TODO: create consistent parsing functions for format of the reports
 
 DEBUG=False
-STRESS_TEST=True
-HOSTS=5000
+STRESS_TEST=False
+HOSTS=1000
 
 def printd(to_print, to_print2=None):
     if DEBUG:
@@ -118,9 +118,12 @@ class ReportProcess(multiprocessing.Process):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         print("Usage: ./host.py <aggregator address> <local address>")
         exit(1)
+    if len(sys.argv) > 3:
+        STRESS_TEST=True
+        HOSTS = int(sys.argv[3])
     aggregator_addr = sys.argv[1]
     local_addr = sys.argv[2]
     usage_queue = multiprocessing.Queue()
