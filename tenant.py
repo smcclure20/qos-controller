@@ -55,11 +55,12 @@ class AggregationProcess(multiprocessing.Process):
 
     async def process_reports(self):
         self.clear_totals()
-        self.aggregate_tenant()
+        task = asyncio.create_task(self.aggregate_tenant())
+        await asyncio.wait(task, timeout=AGGREGATION_INTERVAL)
         self.calculate_priority()
         self.report_priorities()
 
-    def aggregate_tenant(self):
+    async def aggregate_tenant(self):
         printd("Checking queue")
         while not self.usage_queue.empty():
             update = self.usage_queue.get()
