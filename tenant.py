@@ -62,20 +62,18 @@ class AggregationProcess(multiprocessing.Process):
 
     async def process_reports(self):
         self.clear_totals()
-        task = asyncio.create_task(self.aggregate_tenant())
-        t1 = time.time()
-        await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
-        t2 = time.time()
-        print("Aggregation time: ", t2-t1, flush=True)
-        if (t2 - t1 > AGGREGATION_INTERVAL + 2):
-            print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
+        self.aggregate_tenant()
         self.calculate_priority()
         t1 = time.time()
-        self.report_priorities()
+        task = asyncio.create_task(self.report_priorities())
+        await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
         t2 = time.time()
+        if (t2 - t1 > AGGREGATION_INTERVAL + 2):
+            print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
         print("Reporting time:", t2-t1, flush=True)
+        print("Sent {} reports".format(task.result()), flush=True)
 
-    async def aggregate_tenant(self):
+    def aggregate_tenant(self):
         printd("Checking queue")
         print("Approximate queue length: ", self.usage_queue.qsize(), flush=True)
         while not self.usage_queue.empty():
@@ -118,16 +116,19 @@ class AggregationProcess(multiprocessing.Process):
             self.split_fraction = remaining / float(self.total_usage[self.split_class]) if self.split_class in self.total_usage.keys() and float(self.total_usage[self.split_class]) > 0 else 0
 
 
-    def report_priorities(self):  # Report to hosts new ratios
+    async def report_priorities(self):  # Report to hosts new ratios
         print("[{}] Sending priorities to {} reporting hosts".format(time.strftime("%m/%d/%y %H:%M:%S"), len(self.current_hosts)), flush=True)
+        count = 0
         for address in self.current_hosts:
             try:
                 r = requests.post(PRIORITIES_URL.format(address), data={"split_class": self.split_class, "split_fraction": self.split_fraction})
                 printd("Sending priorities to {}:".format(address))
                 printd(r.text)
+                count += 1
             except Exception as e:
                 printd(e)
                 printd("Skipping this report.")
+        return count
 
     # def report_priorities(self):  # Report to hosts new ratios
     #     for address in self.current_hosts:
