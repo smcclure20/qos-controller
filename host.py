@@ -5,6 +5,7 @@ import multiprocessing
 from tenant import PRIORITY_FORMAT
 import sys
 from waitress import serve
+import asyncio
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ HOSTS=1000
 
 def printd(to_print, to_print2=None):
     if DEBUG:
-        print(to_print, to_print2)
+        print(to_print, to_print2) if to_print2 else print(to_print)
 
 
 @app.post('/priorities/')
@@ -75,11 +76,20 @@ class ReportProcess(multiprocessing.Process):
         self.local_addr = local_address
 
     def run(self):
+        asyncio.run(self.run_async())
+
+    async def run_async(self):
         printd("Starting reporting process")
         while True:
-            time.sleep(REPORTING_INTERVAL)
-            self.collect_usage()
-            self.send_usage()
+            task = asyncio.create_task(self.report())
+            done, pending = await asyncio.wait([asyncio.sleep(REPORTING_INTERVAL), task],
+                                               timeout=REPORTING_INTERVAL + 1)
+            if task in pending:
+                print("[WARNING] Reporting process lagging behind interval.")
+
+    async def report(self):
+        self.collect_usage()
+        self.send_usage()
 
     def collect_usage(self):
         # Read BPF usage stats from file
@@ -133,5 +143,9 @@ if __name__ == "__main__":
     usage_queue = multiprocessing.Queue()
     report_task = ReportProcess(usage_queue, aggregator_addr, local_addr)
     report_task.start()
-    # app.run(port=PORT, host=local_addr)
-    serve(app, host=local_addr, port=PORT)
+
+    if DEBUG:
+        app.run(port=PORT, host=local_addr)
+    else:
+        serve(app, host=local_addr, port=PORT)
+

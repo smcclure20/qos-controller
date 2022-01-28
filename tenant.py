@@ -13,9 +13,9 @@ AGGREGATION_INTERVAL = 10
 PRIORITIES_URL = 'http://{}/priorities'
 DEBUG=False
 
-def printd(to_print):
+def printd(to_print, to_print2=None):
     if DEBUG:
-        print(to_print)
+        print(to_print, to_print2) if to_print2 else print(to_print)
 
 @app.post('/usage/')
 def record_usage():
@@ -37,13 +37,17 @@ class AggregationProcess(multiprocessing.Process):
         self.split_class = None
         self.split_fraction = None
 
-    async def run(self):
+    def run(self):
+        asyncio.run(self.run_async())
+
+    async def run_async(self):
         printd("Starting aggregation process")
         while True:
             printd("Calculating priorities...")
             task = asyncio.create_task(self.process_reports())
-            time.sleep(AGGREGATION_INTERVAL)
-            await task
+            done, pending = await asyncio.wait([asyncio.sleep(AGGREGATION_INTERVAL), task], timeout=AGGREGATION_INTERVAL+1)
+            if task in pending:
+                print("[WARNING] Aggregation process lagging behind interval.")
             printd("Updated priority traffic ratios:")
             printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
@@ -123,10 +127,14 @@ if __name__ == '__main__':
         exit(1)
     host_addr = sys.argv[1]
     host_usage = {}
+
     usage_queue = multiprocessing.Queue()
     aggregation_task = AggregationProcess(usage_queue)
+    # asyncio.run(aggregation_task.run())
     aggregation_task.start()
-    # app.run(port=5000, host=host_addr)
-    serve(app, host=host_addr, port=5000)
+    if DEBUG:
+        app.run(port=5000, host=host_addr)
+    else:
+        serve(app, host=host_addr, port=5000)
 
 
