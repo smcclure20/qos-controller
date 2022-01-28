@@ -66,6 +66,7 @@ class AggregationProcess(multiprocessing.Process):
         t1 = time.time()
         await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
         t2 = time.time()
+        print("Aggregation time: ", t2-t1, flush=True)
         if (t2 - t1 > AGGREGATION_INTERVAL + 2):
             print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
         self.calculate_priority()
