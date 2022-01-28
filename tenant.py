@@ -25,7 +25,7 @@ def record_usage():
     host_usage.pop("name")
     usage_queue.put(host_usage)
     if usage_queue.qsize() % 50 == 0:
-        print("[RECEIVER] Approximate queue length: ", usage_queue.qsize())
+        print("[RECEIVER] Approximate queue length: ", usage_queue.qsize(), flush=True)
     return make_response(request.form.to_dict())
 
 
@@ -48,10 +48,10 @@ class AggregationProcess(multiprocessing.Process):
             printd("Calculating priorities...")
             task = asyncio.create_task(self.process_reports())
             done, pending = await asyncio.wait([asyncio.sleep(AGGREGATION_INTERVAL), task], timeout=AGGREGATION_INTERVAL+1)
-            print("[{}] Completed Interval".format(time.strftime("%m/%d/%y %H:%M:%S")))
+            print("[{}] Completed Interval".format(time.strftime("%m/%d/%y %H:%M:%S")), flush=True)
             #print("Done: {} ({}), Pending: {} ({})".format(len(done),done,  len(pending), pending))
             if task in pending:
-                print("[WARNING] Aggregation process lagging behind interval.")
+                print("[WARNING] Aggregation process lagging behind interval.", flush=True)
             printd("Updated priority traffic ratios:")
             printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
 
@@ -64,7 +64,7 @@ class AggregationProcess(multiprocessing.Process):
 
     async def aggregate_tenant(self):
         printd("Checking queue")
-        print("Approximate queue length: ", self.usage_queue.qsize())
+        print("Approximate queue length: ", self.usage_queue.qsize(), flush=True)
         while not self.usage_queue.empty():
             update = self.usage_queue.get()
             self.current_hosts.append(update.pop("address"))
@@ -106,7 +106,7 @@ class AggregationProcess(multiprocessing.Process):
 
 
     def report_priorities(self):  # Report to hosts new ratios
-        print("[{}] Sending priorities to {} reporting hosts".format(time.strftime("%m/%d/%y %H:%M:%S"), len(self.current_hosts)))
+        print("[{}] Sending priorities to {} reporting hosts".format(time.strftime("%m/%d/%y %H:%M:%S"), len(self.current_hosts)), flush=True)
         for address in self.current_hosts:
             try:
                 r = requests.post(PRIORITIES_URL.format(address), data={"split_class": self.split_class, "split_fraction": self.split_fraction})
