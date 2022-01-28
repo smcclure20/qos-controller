@@ -24,6 +24,8 @@ def record_usage():
     host_usage = request.form.to_dict()
     host_usage.pop("name")
     usage_queue.put(host_usage)
+    if usage_queue.qsize() % 50 == 0:
+        print("[RECEIVER] Approximate queue length: ", usage_queue.qsize())
     return make_response(request.form.to_dict())
 
 
@@ -56,7 +58,7 @@ class AggregationProcess(multiprocessing.Process):
     async def process_reports(self):
         self.clear_totals()
         task = asyncio.create_task(self.aggregate_tenant())
-        await asyncio.wait(task, timeout=AGGREGATION_INTERVAL)
+        await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
         self.calculate_priority()
         self.report_priorities()
 
@@ -139,6 +141,6 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(port=5000, host=host_addr)
     else:
-        serve(app, host=host_addr, port=5000)
+        serve(app, host=host_addr, port=5000, threads=8)
 
 
