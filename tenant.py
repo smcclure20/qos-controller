@@ -47,7 +47,8 @@ class AggregationProcess(multiprocessing.Process):
             task = asyncio.create_task(self.process_reports())
             done, pending = await asyncio.wait([asyncio.sleep(AGGREGATION_INTERVAL), task], timeout=AGGREGATION_INTERVAL+1)
             print("[{}] Completed Interval".format(time.strftime("%m/%d/%y %H:%M:%S")))
-            if len(pending) > 0:
+            #print("Done: {} ({}), Pending: {} ({})".format(len(done),done,  len(pending), pending))
+            if task in pending:
                 print("[WARNING] Aggregation process lagging behind interval.")
             printd("Updated priority traffic ratios:")
             printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
