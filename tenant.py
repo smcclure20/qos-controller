@@ -69,7 +69,10 @@ class AggregationProcess(multiprocessing.Process):
         if (t2 - t1 > AGGREGATION_INTERVAL + 2):
             print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
         self.calculate_priority()
+        t1 = time.time()
         self.report_priorities()
+        t2 = time.time()
+        print("Reporting time:", t2-t1, flush=True)
 
     async def aggregate_tenant(self):
         printd("Checking queue")
