@@ -100,7 +100,7 @@ class AggregationProcess(multiprocessing.Process):
 
 
     def report_priorities(self):  # Report to hosts new ratios
-        print("Sending priorities to {} reporting hosts".format(len(self.current_hosts)))
+        print("[{}] Sending priorities to {} reporting hosts".format(time.strftime("%m/%d/%y %H:%M:%S"), len(self.current_hosts)))
         for address in self.current_hosts:
             try:
                 r = requests.post(PRIORITIES_URL.format(address), data={"split_class": self.split_class, "split_fraction": self.split_fraction})
