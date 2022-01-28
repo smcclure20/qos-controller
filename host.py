@@ -4,6 +4,7 @@ from flask import Flask, request, Response, make_response
 import multiprocessing
 from tenant import PRIORITY_FORMAT
 import sys
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -132,4 +133,5 @@ if __name__ == "__main__":
     usage_queue = multiprocessing.Queue()
     report_task = ReportProcess(usage_queue, aggregator_addr, local_addr)
     report_task.start()
-    app.run(port=PORT, host=local_addr)
+    # app.run(port=PORT, host=local_addr)
+    serve(app, host=local_addr, port=PORT)

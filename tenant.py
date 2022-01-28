@@ -1,8 +1,10 @@
 from flask import Flask, request, Response, make_response
+from waitress import serve
 import time
 import multiprocessing
 import requests
 import sys
+import asyncio
 app = Flask(__name__)
 
 PRIO_BANDWIDTH = 5000000000
@@ -35,17 +37,21 @@ class AggregationProcess(multiprocessing.Process):
         self.split_class = None
         self.split_fraction = None
 
-    def run(self):
+    async def run(self):
         printd("Starting aggregation process")
         while True:
-            time.sleep(AGGREGATION_INTERVAL)
             printd("Calculating priorities...")
-            self.clear_totals()
-            self.aggregate_tenant()
-            self.calculate_priority()
-            self.report_priorities()
+            task = asyncio.create_task(self.process_reports())
+            time.sleep(AGGREGATION_INTERVAL)
+            await task
             printd("Updated priority traffic ratios:")
             printd("split class {}; bw fraction {}".format(self.split_class, self.split_fraction))
+
+    async def process_reports(self):
+        self.clear_totals()
+        self.aggregate_tenant()
+        self.calculate_priority()
+        self.report_priorities()
 
     def aggregate_tenant(self):
         printd("Checking queue")
@@ -120,6 +126,7 @@ if __name__ == '__main__':
     usage_queue = multiprocessing.Queue()
     aggregation_task = AggregationProcess(usage_queue)
     aggregation_task.start()
-    app.run(port=5000, host=host_addr)
+    # app.run(port=5000, host=host_addr)
+    serve(app, host=host_addr, port=5000)
 
 
