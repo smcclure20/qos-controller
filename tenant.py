@@ -50,9 +50,10 @@ class AggregationProcess(multiprocessing.Process):
             task = asyncio.create_task(self.process_reports())
             done, pending = await asyncio.wait([asyncio.sleep(AGGREGATION_INTERVAL), task], timeout=AGGREGATION_INTERVAL+1)
             print("[{}] Completed Interval".format(time.strftime("%m/%d/%y %H:%M:%S")), flush=True)
-            t2 =  time.time()
-            if (t2 - t1 > AGGREGATION_INTERVAL + 2)
+            t2 = time.time()
+            if (t2 - t1 > AGGREGATION_INTERVAL + 2):
                 print("[WARNING] Aggregation process lagging behind interval.", flush=True)
+                print(len(pending), pending, flush=True)
             #print("Done: {} ({}), Pending: {} ({})".format(len(done),done,  len(pending), pending))
             if task in pending:
                 print("[WARNING] Aggregation process lagging behind interval.", flush=True)
@@ -62,7 +63,11 @@ class AggregationProcess(multiprocessing.Process):
     async def process_reports(self):
         self.clear_totals()
         task = asyncio.create_task(self.aggregate_tenant())
+        t1 = time.time()
         await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
+        t2 = time.time()
+        if (t2 - t1 > AGGREGATION_INTERVAL + 2):
+            print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
         self.calculate_priority()
         self.report_priorities()
 
