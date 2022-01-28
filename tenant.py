@@ -62,6 +62,7 @@ class AggregationProcess(multiprocessing.Process):
 
     async def aggregate_tenant(self):
         printd("Checking queue")
+        print("Approximate queue length: ", self.usage_queue.qsize())
         while not self.usage_queue.empty():
             update = self.usage_queue.get()
             self.current_hosts.append(update.pop("address"))
