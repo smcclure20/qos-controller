@@ -128,6 +128,7 @@ class AggregationProcess(multiprocessing.Process):
 
 
 if __name__ == '__main__':
+    print(sys.argv, flush=True)
     if len(sys.argv) < 2:
         print("Usage: ./tenant.py <host ip>")
         exit(1)
