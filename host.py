@@ -116,7 +116,9 @@ class ReportProcess(multiprocessing.Process):
             printd(e)
 
         if STRESS_TEST:
+            sent_count = 0
             for i in range(HOSTS - 1):
+                sent_count += 1
                 self.current_usage["name"] = "host" + str(i+1)
                 self.current_usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
                 try:
@@ -126,6 +128,8 @@ class ReportProcess(multiprocessing.Process):
                 except Exception as e:
                     printd("Failed connection.")
                     printd(e)
+            print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
+                                                                         sent_count))
 
 
 if __name__ == "__main__":
