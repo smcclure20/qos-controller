@@ -128,9 +128,17 @@ class AggregationProcess(multiprocessing.Process):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print("Usage: ./tenant.py <host ip>")
         exit(1)
+    if "-t" in sys.argv:
+        threads = int(sys.argv[sys.argv.index("-t") + 1])
+    else:
+        threads = 4
+
+    if "-i" in sys.argv:
+        AGGREGATION_INTERVAL = int(sys.argv[sys.argv.index("-i") + 1])
+    
     host_addr = sys.argv[1]
     host_usage = {}
 
@@ -141,6 +149,6 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(port=5000, host=host_addr)
     else:
-        serve(app, host=host_addr, port=5000, threads=8)
+        serve(app, host=host_addr, port=5000, threads=threads)
 
 
