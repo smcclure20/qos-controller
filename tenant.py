@@ -24,8 +24,8 @@ def record_usage():
     host_usage = request.form.to_dict()
     host_usage.pop("name")
     usage_queue.put(host_usage)
-    if usage_queue.qsize() % 50 == 0:
-        print("[RECEIVER] Approximate queue length: ", usage_queue.qsize(), flush=True)
+    # if usage_queue.qsize() % 50 == 0:
+    #     print("[RECEIVER] Approximate queue length: ", usage_queue.qsize(), flush=True)
     return make_response(request.form.to_dict())
 
 
@@ -66,7 +66,7 @@ class AggregationProcess(multiprocessing.Process):
         self.calculate_priority()
         t1 = time.time()
         task = asyncio.create_task(self.report_priorities())
-        await asyncio.wait([task], timeout=AGGREGATION_INTERVAL)
+        await asyncio.wait_for(task, timeout=AGGREGATION_INTERVAL)
         t2 = time.time()
         if (t2 - t1 > AGGREGATION_INTERVAL + 2):
             print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
