@@ -105,7 +105,7 @@ class ReportProcess(multiprocessing.Process):
             printd(e)
 
         if STRESS_TEST:
-            for i in range(HOSTS):
+            for i in range(HOSTS - 1):
                 self.current_usage["name"] = "host" + str(i+1)
                 self.current_usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
                 try:
