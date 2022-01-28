@@ -46,9 +46,13 @@ class AggregationProcess(multiprocessing.Process):
         printd("Starting aggregation process")
         while True:
             printd("Calculating priorities...")
+            t1 = time.time()
             task = asyncio.create_task(self.process_reports())
             done, pending = await asyncio.wait([asyncio.sleep(AGGREGATION_INTERVAL), task], timeout=AGGREGATION_INTERVAL+1)
             print("[{}] Completed Interval".format(time.strftime("%m/%d/%y %H:%M:%S")), flush=True)
+            t2 =  time.time()
+            if (t2 - t1 > AGGREGATION_INTERVAL + 2)
+                print("[WARNING] Aggregation process lagging behind interval.", flush=True)
             #print("Done: {} ({}), Pending: {} ({})".format(len(done),done,  len(pending), pending))
             if task in pending:
                 print("[WARNING] Aggregation process lagging behind interval.", flush=True)
