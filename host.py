@@ -121,9 +121,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: ./host.py <aggregator address> <local address>")
         exit(1)
-    if len(sys.argv) > 3:
+    if "-s" in sys.argv:
         STRESS_TEST=True
-        HOSTS = int(sys.argv[3])
+        HOSTS = int(sys.argv[sys.argv.index("-s") + 1])
+    if "-i" in sys.argv:
+        REPORTING_INTERVAL = int(sys.argv[sys.argv.index("-i") + 1])
+
     aggregator_addr = sys.argv[1]
     local_addr = sys.argv[2]
     usage_queue = multiprocessing.Queue()
