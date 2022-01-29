@@ -16,6 +16,7 @@ ADDRESS_FORMAT = "{}:{}"
 USAGE_FILE = "./usage"
 PRIORITIES_FILE = "./prios"
 SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
+UPDATE_DRAIN_ADDR = "10.10.1.220"
 
 # TODO: create consistent parsing functions for format of the reports
 
@@ -32,23 +33,23 @@ def printd(to_print, to_print2=None):
 def set_priorities():
     printd("Received priority update")
     update = request.form.to_dict()
-    # priorities = dict.fromkeys(range(0, 32), 1)
-    # if "split_class" in update:
-    #     priorities[int(update["split_class"])] = 3
-    #     priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
-    #
-    #     bws = {}
-    #     while not usage_queue.empty():
-    #         bws = usage_queue.get()
-    #
-    #     with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-    #         if len(bws.keys()) > 0:
-    #             file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
-    #             printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
-    # printd("Current priorities:", priorities)
-    #
-    # with open(PRIORITIES_FILE, "w") as file:
-    #     file.write(str(priorities))
+    priorities = dict.fromkeys(range(0, 32), 1)
+    if "split_class" in update:
+        priorities[int(update["split_class"])] = 3
+        priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
+
+        bws = {}
+        while not usage_queue.empty():
+            bws = usage_queue.get()
+
+        with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
+            if len(bws.keys()) > 0:
+                file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
+                printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
+    printd("Current priorities:", priorities)
+
+    with open(PRIORITIES_FILE, "w") as file:
+        file.write(str(priorities))
 
     return make_response(request.form.to_dict())
 
@@ -96,6 +97,7 @@ class ReportProcess(multiprocessing.Process):
 
         if STRESS_TEST and HOSTS > 1:
             tasks = []
+            self.current_usage["address"] = UPDATE_DRAIN_ADDR
             for i in range(HOSTS-1):
                 tasks.append(asyncio.create_task(self.send_usage_async()))
             done, pending = await asyncio.wait(tasks, timeout=REPORTING_INTERVAL)
@@ -125,32 +127,32 @@ class ReportProcess(multiprocessing.Process):
             printd(e)
             printd("Failed connection.")
 
-    def send_usage(self):
-        self.usage_queue.put(self.current_usage)
-        try:
-            r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
-            printd("Sending usage:")
-            printd(r.text)
-        except Exception as e:
-            printd("Failed connection.")
-            printd(e)
-
-        if STRESS_TEST:
-            sent_count = 0
-            for i in range(HOSTS - 1):
-                sent_count += 1
-                self.current_usage["name"] = "host" + str(i+1)
-                self.current_usage["address"] = self.local_addr
-                self.current_usage["port"] = PORT
-                try:
-                    r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
-                    printd("Sending usage:")
-                    printd(r.text)
-                except Exception as e:
-                    printd("Failed connection.")
-                    printd(e)
-            print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
-                                                                         sent_count), flush=True)
+    # def send_usage(self):
+    #     self.usage_queue.put(self.current_usage)
+    #     try:
+    #         r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
+    #         printd("Sending usage:")
+    #         printd(r.text)
+    #     except Exception as e:
+    #         printd("Failed connection.")
+    #         printd(e)
+    #
+    #     if STRESS_TEST:
+    #         sent_count = 0
+    #         for i in range(HOSTS - 1):
+    #             sent_count += 1
+    #             self.current_usage["name"] = "host" + str(i+1)
+    #             self.current_usage["address"] = self.local_addr
+    #             self.current_usage["port"] = PORT
+    #             try:
+    #                 r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
+    #                 printd("Sending usage:")
+    #                 printd(r.text)
+    #             except Exception as e:
+    #                 printd("Failed connection.")
+    #                 printd(e)
+    #         print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
+    #                                                                      sent_count), flush=True)
 
 
 if __name__ == "__main__":
