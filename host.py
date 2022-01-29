@@ -102,7 +102,8 @@ class ReportProcess(multiprocessing.Process):
             usage[PRIORITY_FORMAT.format(stat[0])] = stat[1]
         # usage = {"name": "host1", "address": ADDRESS_FORMAT.format(ADDRESS_FORMA, PORT), "prio_0": 2.5, "prio_1": 15} # Index is priority level, data is gbps
         usage["name"] = "host1"
-        usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
+        usage["address"] = self.local_addr
+        usage["port"] = PORT
         self.current_usage = usage
 
     def send_usage(self):
@@ -120,7 +121,8 @@ class ReportProcess(multiprocessing.Process):
             for i in range(HOSTS - 1):
                 sent_count += 1
                 self.current_usage["name"] = "host" + str(i+1)
-                self.current_usage["address"] = ADDRESS_FORMAT.format(self.local_addr, PORT)
+                self.current_usage["address"] = self.local_addr
+                self.current_usage["port"] = PORT
                 try:
                     r = requests.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
                     printd("Sending usage:")

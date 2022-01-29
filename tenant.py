@@ -1,4 +1,6 @@
 from flask import Flask, request, Response, make_response
+import requests
+import aiohttp
 from waitress import serve
 import time
 import multiprocessing
@@ -10,7 +12,7 @@ app = Flask(__name__)
 PRIO_BANDWIDTH = 5000000000
 PRIORITY_FORMAT = "{}"
 AGGREGATION_INTERVAL = 10
-PRIORITIES_URL = 'http://{}/priorities'
+PRIORITIES_URL = 'http://{}:{}/priorities'
 DEBUG=False
 
 def printd(to_print, to_print2=None):
@@ -64,24 +66,26 @@ class AggregationProcess(multiprocessing.Process):
         self.clear_totals()
         self.aggregate_tenant()
         self.calculate_priority()
+
+        print("Attempting to send {} reports".format(len(self.current_hosts)), flush=True)
         t1 = time.time()
-        task = asyncio.create_task(self.report_priorities())
-        try:
-            await asyncio.wait_for(task, timeout=AGGREGATION_INTERVAL)
-        except asyncio.TimeoutError:
-            print('timeout!')
+        tasks = []
+        for client in self.current_hosts:
+            tasks.append(self.report_prio_async(client[0], client[1]))
+        
+        done, pending = await asyncio.wait_for(tasks, timeout=AGGREGATION_INTERVAL)
         t2 = time.time()
         if (t2 - t1 > AGGREGATION_INTERVAL + 2):
             print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
         print("Reporting time:", t2-t1, flush=True)
-        print("Sent {} reports".format(task.result()), flush=True)
+        print("Sent {} reports".format(len(done)), flush=True)
 
     def aggregate_tenant(self):
         printd("Checking queue")
         print("Approximate queue length: ", self.usage_queue.qsize(), flush=True)
         while not self.usage_queue.empty():
             update = self.usage_queue.get()
-            self.current_hosts.append(update.pop("address"))
+            self.current_hosts.append((update.pop("address"), update.pop("port")))
             for key in update.keys():
                 priority = int(key)
                 if priority in self.total_usage.keys():
@@ -132,6 +136,15 @@ class AggregationProcess(multiprocessing.Process):
                 printd(e)
                 printd("Skipping this report.")
         return count
+
+    async def report_prio_async(self, host, port):
+        try:
+            async with aiohttp.ClientSession() as session:
+                r = await session.post(PRIORITIES_URL.format(host, port), data={"split_class": self.split_class,
+                                                                                "split_fraction": self.split_fraction})
+        except Exception as e:
+            printd(e)
+            printd("Skipping this report.")
 
     # def report_priorities(self):  # Report to hosts new ratios
     #     for address in self.current_hosts:
