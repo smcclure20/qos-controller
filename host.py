@@ -32,23 +32,23 @@ def printd(to_print, to_print2=None):
 def set_priorities():
     printd("Received priority update")
     update = request.form.to_dict()
-    priorities = dict.fromkeys(range(0, 32), 1)
-    if "split_class" in update:
-        priorities[int(update["split_class"])] = 3
-        priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
-
-        bws = {}
-        while not usage_queue.empty():
-            bws = usage_queue.get()
-
-        with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
-            if len(bws.keys()) > 0:
-                file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
-                printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
-    printd("Current priorities:", priorities)
-
-    with open(PRIORITIES_FILE, "w") as file:
-        file.write(str(priorities))
+    # priorities = dict.fromkeys(range(0, 32), 1)
+    # if "split_class" in update:
+    #     priorities[int(update["split_class"])] = 3
+    #     priorities.update(dict.fromkeys(range(int(update["split_class"]) + 1, 32), 2))
+    #
+    #     bws = {}
+    #     while not usage_queue.empty():
+    #         bws = usage_queue.get()
+    #
+    #     with open(SPLIT_CLASS_BW_CAP_FILE, "w") as file:
+    #         if len(bws.keys()) > 0:
+    #             file.write(str(float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))])))
+    #             printd("Split bandwidth: ", float(update["split_fraction"]) * float(bws[PRIORITY_FORMAT.format(int(update["split_class"]))]))
+    # printd("Current priorities:", priorities)
+    #
+    # with open(PRIORITIES_FILE, "w") as file:
+    #     file.write(str(priorities))
 
     return make_response(request.form.to_dict())
 
