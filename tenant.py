@@ -183,6 +183,6 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(port=5000, host=host_addr)
     else:
-        serve(app, host=host_addr, port=5000, threads=threads)
+        serve(app, host=host_addr, port=5000, threads=threads, connection_limit=1000)
 
 

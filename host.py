@@ -94,7 +94,7 @@ class ReportProcess(multiprocessing.Process):
         task = asyncio.create_task(self.send_usage_async())
         await asyncio.wait_for(task, timeout=REPORTING_INTERVAL)
 
-        if STRESS_TEST:
+        if STRESS_TEST and HOSTS > 1:
             tasks = []
             for i in range(HOSTS-1):
                 tasks.append(asyncio.create_task(self.send_usage_async()))
