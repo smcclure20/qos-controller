@@ -85,7 +85,7 @@ class ReportProcess(multiprocessing.Process):
             done, pending = await asyncio.wait([asyncio.sleep(REPORTING_INTERVAL), task],
                                                timeout=REPORTING_INTERVAL + 1)
             if task in pending:
-                print("[WARNING] Reporting process lagging behind interval.")
+                print("[WARNING] Reporting process lagging behind interval.", flush=True)
 
     async def report(self):
         self.collect_usage()
@@ -131,7 +131,7 @@ class ReportProcess(multiprocessing.Process):
                     printd("Failed connection.")
                     printd(e)
             print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
-                                                                         sent_count))
+                                                                         sent_count), flush=True)
 
 
 if __name__ == "__main__":
