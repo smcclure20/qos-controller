@@ -16,13 +16,14 @@ ADDRESS_FORMAT = "{}:{}"
 USAGE_FILE = "./usage"
 PRIORITIES_FILE = "./prios"
 SPLIT_CLASS_BW_CAP_FILE = "./bw_cap"
-UPDATE_DRAIN_ADDR = "10.10.1.220"
 
 # TODO: create consistent parsing functions for format of the reports
 
 DEBUG=False
 STRESS_TEST=False
-HOSTS=1000
+HOSTS=1
+UPDATE_DRAIN_ADDR = "10.10.1.220"
+DRAIN_MODE = False
 
 def printd(to_print, to_print2=None):
     if DEBUG:
@@ -164,12 +165,16 @@ if __name__ == "__main__":
         HOSTS = int(sys.argv[sys.argv.index("-s") + 1])
     if "-i" in sys.argv:
         REPORTING_INTERVAL = int(sys.argv[sys.argv.index("-i") + 1])
+    if "-d" in sys.argv:
+        DRAIN_MODE = True
 
     aggregator_addr = sys.argv[1]
     local_addr = sys.argv[2]
+
     usage_queue = multiprocessing.Queue()
-    report_task = ReportProcess(usage_queue, aggregator_addr, local_addr)
-    report_task.start()
+    if not DRAIN_MODE:
+        report_task = ReportProcess(usage_queue, aggregator_addr, local_addr)
+        report_task.start()
 
     if DEBUG:
         app.run(port=PORT, host=local_addr)
