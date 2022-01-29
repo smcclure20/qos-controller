@@ -99,7 +99,8 @@ class ReportProcess(multiprocessing.Process):
             for i in range(HOSTS-1):
                 tasks.append(asyncio.create_task(self.send_usage_async()))
             done, pending = await asyncio.wait(tasks, timeout=REPORTING_INTERVAL)
-            print("Sent {} reports".format(len(done)))
+            print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
+                                                len(done)), flush=True)
 
     def collect_usage(self):
         # Read BPF usage stats from file
