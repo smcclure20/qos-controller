@@ -1,4 +1,5 @@
 import requests
+import aiohttp
 import time
 from flask import Flask, request, Response, make_response
 import multiprocessing
@@ -83,13 +84,22 @@ class ReportProcess(multiprocessing.Process):
         while True:
             task = asyncio.create_task(self.report())
             done, pending = await asyncio.wait([asyncio.sleep(REPORTING_INTERVAL), task],
-                                               timeout=REPORTING_INTERVAL + 1)
+                                               timeout=REPORTING_INTERVAL)
             if task in pending:
                 print("[WARNING] Reporting process lagging behind interval.", flush=True)
 
     async def report(self):
         self.collect_usage()
-        self.send_usage()
+        self.usage_queue.put(self.current_usage)
+        task = asyncio.create_task(self.send_usage_async())
+        await asyncio.wait_for(task, timeout=REPORTING_INTERVAL)
+
+        if STRESS_TEST:
+            tasks = []
+            for i in range(HOSTS-1):
+                tasks.append(asyncio.create_task(self.send_usage_async()))
+            done, pending = await asyncio.wait(tasks, timeout=REPORTING_INTERVAL)
+            print("Sent {} reports".format(len(done)))
 
     def collect_usage(self):
         # Read BPF usage stats from file
@@ -105,6 +115,14 @@ class ReportProcess(multiprocessing.Process):
         usage["address"] = self.local_addr
         usage["port"] = PORT
         self.current_usage = usage
+
+    async def send_usage_async(self):
+        try:
+            async with aiohttp.ClientSession() as session:
+                r = await session.post('http://{}/usage'.format(self.aggregator), data=self.current_usage)
+        except Exception as e:
+            printd(e)
+            printd("Failed connection.")
 
     def send_usage(self):
         self.usage_queue.put(self.current_usage)
@@ -153,5 +171,5 @@ if __name__ == "__main__":
     if DEBUG:
         app.run(port=PORT, host=local_addr)
     else:
-        serve(app, host=local_addr, port=PORT)
+        serve(app, host=local_addr, port=PORT, threads=4, connection_limit=1000)
 

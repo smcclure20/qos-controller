@@ -73,7 +73,7 @@ class AggregationProcess(multiprocessing.Process):
         for client in self.current_hosts:
             tasks.append(self.report_prio_async(client[0], client[1]))
 
-        done = None
+        done = []
         if len(tasks) > 0:
             done, pending = await asyncio.wait(tasks, timeout=AGGREGATION_INTERVAL)
 
