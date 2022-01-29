@@ -73,7 +73,10 @@ class AggregationProcess(multiprocessing.Process):
         for client in self.current_hosts:
             tasks.append(self.report_prio_async(client[0], client[1]))
 
-        done, pending = await asyncio.wait(tasks, timeout=AGGREGATION_INTERVAL)
+        done = None
+        if len(tasks) > 0:
+            done, pending = await asyncio.wait(tasks, timeout=AGGREGATION_INTERVAL)
+
         t2 = time.time()
         if (t2 - t1 > AGGREGATION_INTERVAL + 2):
             print("[WARNING] [2] Aggregation process lagging behind interval.", flush=True)
