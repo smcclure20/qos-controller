@@ -64,9 +64,9 @@ class AggregationProcess(multiprocessing.Process):
 
     async def process_reports(self):
         self.clear_totals()
-        self.aggregate_tenant()
+        self.aggregate_tenant() # TODO: Make this async?
         self.calculate_priority()
-
+        print("Approx queue length: ", self.usage_queue.qsize())
         print("Attempting to send {} reports".format(len(self.current_hosts)), flush=True)
         t1 = time.time()
         tasks = []
@@ -86,7 +86,7 @@ class AggregationProcess(multiprocessing.Process):
     def aggregate_tenant(self):
         printd("Checking queue")
         print("Approximate queue length: ", self.usage_queue.qsize(), flush=True)
-        while not self.usage_queue.empty():
+        while not self.usage_queue.empty() or self.usage_queue.qsize() > 0:
             update = self.usage_queue.get()
             self.current_hosts.append((update.pop("address"), update.pop("port")))
             for key in update.keys():
@@ -95,6 +95,7 @@ class AggregationProcess(multiprocessing.Process):
                     self.total_usage[priority] += float(update[key])
                 else:
                     self.total_usage[priority] = float(update[key])
+        print("[End of Agg] Approximate queue length: {} (empty: {})".format(self.usage_queue.qsize(), self.usage_queue.empty()), flush=True)
 
     def clear_totals(self):
         self.total_usage.clear()
@@ -183,6 +184,6 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(port=5000, host=host_addr)
     else:
-        serve(app, host=host_addr, port=5000, threads=threads, connection_limit=1000)
+        serve(app, host=host_addr, port=5000, threads=threads, connection_limit=10000)
 
 
