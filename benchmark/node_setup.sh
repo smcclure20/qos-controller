@@ -6,7 +6,9 @@ sudo apt-get -y install pip
 
 pip install flask waitress pyroute2 aiohttp
 
-git clone git@github.com:smcclure20/qos-controller.git
+cd /home/ubuntu
+
+git clone https://github.com/smcclure20/qos-controller.git
 
 cd qos-controller
 

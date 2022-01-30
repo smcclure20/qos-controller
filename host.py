@@ -93,16 +93,20 @@ class ReportProcess(multiprocessing.Process):
     async def report(self):
         self.collect_usage()
         self.usage_queue.put(self.current_usage)
-        task = asyncio.create_task(self.send_usage_async())
-        await asyncio.wait_for(task, timeout=REPORTING_INTERVAL)
+        # task = asyncio.create_task(self.send_usage_async())
+        # await asyncio.wait_for(task, timeout=REPORTING_INTERVAL)
 
+
+        tasks = []
+        tasks.append(asyncio.create_task(self.send_usage_async()))
+        
         if STRESS_TEST and HOSTS > 1:
-            tasks = []
             self.current_usage["address"] = UPDATE_DRAIN_ADDR
             for i in range(HOSTS-1):
                 tasks.append(asyncio.create_task(self.send_usage_async()))
-            done, pending = await asyncio.wait(tasks, timeout=REPORTING_INTERVAL)
-            print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
+        done, pending = await asyncio.wait(tasks, timeout=REPORTING_INTERVAL)
+
+        print("[{}] Sent {} reports".format(time.strftime("%m/%d/%y %H:%M:%S"),
                                                 len(done)), flush=True)
 
     def collect_usage(self):
